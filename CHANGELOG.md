@@ -1,0 +1,61 @@
+# Changelog
+
+## 0.4.0
+
+**Not compatible with 0.3.x.** The skills no longer read the formats version 0.3 wrote, and `/shilaycow-autopilot` starts nothing in a project that has not been upgraded: its gate names what is left. Follow [Upgrading from 0.3](#upgrading-from-03) before your next task.
+
+### What changed
+
+- **Two modes instead of four levels.** `mode: manual | auto` replaces `merge_unit`. Per-ticket and per-milestone pull requests are gone: in auto mode every task is one branch, `task/<slug>`, created when the task begins, and one pull request into `main`.
+- **Starting a run is a command.** `/shilaycow-chief` only agrees the brief with you; saying "start" to it starts nothing. The new `/shilaycow-autopilot` runs the task unattended, and only after a gate script has checked the config, the brief, the bot's identity and role, and the ruleset. Neither skill can be started by the model on its own.
+- **A run starts only on the brief you approved.** When you approve it, `/shilaycow-chief` records a `brief-approved` row in the trail; the gate refuses a brief without one, or changed since.
+- **The gate compares the ruleset in force with the one setup ships.** No pull request, or no required approval, stops the run; any other difference is a warning that names the setting.
+- **The gate asks GitHub itself.** It needs a read-only token of the bot: see Requirements in the README.
+- **Verification depth follows each ticket's risk** (low, medium, high), set from what the change touches. The brief's Care level is replaced by **Critical areas**, the parts of your system where any change counts as high.
+- **Large work is a chain of tasks** written down in `docs/spec/roadmap.md`, and a documents-only first task can now pass verification.
+- **Headings are English only** in briefs, specs and reports.
+- The pull request into `main` links to the final report instead of copying it.
+- **Final verification converges.** Each failed item is a defect or a gap; a FAIL names where else the same kind of mistake was searched for; a fix round is judged on what changed since the last verdict; `fix_rounds` now stops a run when a defect survives it, and a run with only gaps left hands the pull request to you instead of fixing on.
+- **The learning loop runs at the start of the next task.** `/shilaycow-chief` folds earlier Retros into `.shilaycow/pitfalls.md` (each entry now cites its sources, so a fold is never counted twice), and proposes due `shilaycow-correct` changes as scenarios of the new task. A guarded entry moves under `## Guarded` instead of being deleted.
+- **The independent verifier starts with the repository it judges** and stops with a message, never judging from memory, when its session has no skills; your setup script must install them in every session of the environment.
+- **Gaps and findings become `later` issues** instead of fix rounds; the next task in their area is offered them, and a class seen twice becomes a pitfall. A defect whose cause is already a pitfall gets a guard before its fix.
+- **No budget.** The brief has no Budget section and the config no `budget`: how much a run may spend is set by your Claude plan or API account. A run still ends when a defect survives `fix_rounds` or you say stop.
+- A ticket that keeps behaviour unchanged (a refactor, a swapped implementation) is checked by breaking that behaviour, since nothing fails before it is built.
+- Low-risk work still gets its diff scanned; a project with no app to start is verified by the brief's manual steps.
+- Builders work under `.shilaycow/worktrees/`, which `/shilaycow-setup` adds to `.gitignore`; setup also creates the `needs-owner` and `later` labels.
+- A trail's header row is its format, and its timestamps come from the clock. A report's "How to try it" says `not run` for anything not actually run. Finishing starts by checking the checkout is the task branch's head.
+
+### Upgrading from 0.3
+
+1. **Finish or drop any task in progress** with the version that started it. A task is in progress while its `task/<slug>` branch is not merged into `main`: merge it, or delete the branch. The tracking issues and `work/` branches of merged tasks can stay.
+2. **Update the installed skills.** With the plugin, refresh the marketplace and then update the plugin:
+
+   ```bash
+   claude plugin marketplace update shilaycow
+   ```
+
+   ```bash
+   claude plugin update shilaycow@shilaycow
+   ```
+
+   The new version loads in your next session, or after `/reload-plugins` in a running one. Inside a session the same is `/plugin`, the **Installed** tab, the plugin, **Update now**.
+
+   With the cloud setup script: the script copies and never deletes, so first remove the old folders from the environment, for example by adding `rm -rf "${HOME:-/root}"/.claude/skills/shilaycow-*` before the `cp` line once.
+3. **Delete any copy of the skills inside your repository.** Some projects copied them into `.claude/skills/` (`go`, `setup`, `sharpen`, `verify` and the rest, or `shilaycow-*`). A copy there is loaded beside the installed skills, and the old `go` can start unattended work by itself. Keep your project's own try-it skill, renaming `drive-<app>` to `try-<app>`.
+4. **Give every entry in `.shilaycow/pitfalls.md` a `Sources:` line** naming the tracking issues whose `Retro:` or owner comments are already folded into that entry, for example `Sources: #2, #6`. Leave out a tracking issue whose Retro is not in the file yet: the next task folds it, and only if no entry cites it. If 0.3's `shilaycow-correct` deleted an entry and no other entry cites its source, add one line for it under a `## Guarded` heading at the end, with its `Sources:`, so it is not folded back in.
+5. **Rename the old headings** in `docs/spec/` and in any brief you will reuse, and delete any 預算 or Budget section from them; nothing reads it any more. Merged reports can stay as they are. If you have no `docs/spec/` and no brief to reuse, skip this step.
+
+   | 0.3 heading | 0.4 heading |
+   |---|---|
+   | 情境 | Scenarios |
+   | 規則 | Rules |
+   | 尚未建置 | Not yet built |
+   | 目標 | Goal |
+   | 不做什麼 | Out of scope |
+   | 怎麼試 | How to try it |
+   | 假設 | Assumptions |
+   | 謹慎程度 or Care level | Critical areas: list the areas where any change matters, or write None |
+
+   Steps 3 to 5 are renames and deletions; any session can do them in manual mode, in one pull request you merge.
+6. **Run `/shilaycow-setup` again.** Its pull request replaces `merge_unit` and `budget` with `mode: auto` in `.shilaycow/config.yml`, adds `.shilaycow/worktrees/` to `.gitignore`, and walks you through the one new step: a read-only token of the bot for the gate. It checks the token by running the gate on its own branch, before you merge it.
+7. **Merge the pull request of steps 3 to 5 and the setup pull request into `main`**, then start the next task with `/shilaycow-chief`. If anything is left, `/shilaycow-autopilot` says what.

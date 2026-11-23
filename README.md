@@ -3,14 +3,34 @@
 Skills for Claude Code that take a task from a vague idea to a pull request you can trust, while a server-side boundary keeps the agent out of `main`.
 
 <p align="center">
-  <img src="assets/task-flow.webp" alt="How a task flows through shilaycow. With you: sharpening, designing together, you say start. Approved, then unattended, the agent acting as a bot: planning, building, finishing, judging, and fixing on FAIL until a new head gets a new verdict. PASS, then your call on GitHub: ready for you, you merge, merged; or you send it back. Underneath: the bot has Write only and a ruleset protects main, so only you can merge.">
+  <img src="assets/task-flow.webp" alt="How a task flows through shilaycow. With you: /shilaycow-chief says back what you asked and writes a brief, designing together is optional, then you type /shilaycow-autopilot and a gate checks setup and brief before handing over. Once the gate holds, unattended, the agent acting as a bot: planning tickets with a risk level each, building, finishing, judging, and fixing on FAIL until a new head gets a new verdict. PASS, then your call on GitHub: ready for you, you merge, merged; or you send it back. Underneath: the bot has Write only and a ruleset protects main, so only you can merge.">
 </p>
 
-- **18 skills you can use on their own**, one for each practice in the development cycle.
-- **Chief mode** (`/shilaycow-chief`) composes them: it agrees the task with you, then works unattended through fresh builder and verifier sessions.
+- **Skills you can use on their own**, one for each practice in the development cycle.
+- **Auto mode** composes them in two commands: `/shilaycow-chief` agrees the task with you, then `/shilaycow-autopilot` checks that everything is ready and works unattended through fresh builder and verifier sessions.
 - **A boundary on GitHub's servers**: the agent works as a bot with the Write role only, and a ruleset protects `main`, so only you can merge.
 
 Quality comes from checking results (an independent verifier, reading the code, breaking each behaviour to see its test fail), not from prescribing steps. How it all fits together, with diagrams: **[ARCHITECTURE.md](ARCHITECTURE.md)**.
+
+## Requirements
+
+**Manual mode** (you call each skill yourself) needs only Claude Code and `git`.
+
+**Auto mode** (`/shilaycow-chief`, then `/shilaycow-autopilot` working unattended) needs all of the following. `/shilaycow-setup` walks you through them, and `/shilaycow-autopilot` checks them before every run and starts nothing until they hold.
+
+| Requirement | Why |
+|---|---|
+| A GitHub repository where rulesets are available: public, or private on a plan that offers them | the ruleset is what keeps the agent out of `main` |
+| A second GitHub account for the agent (the bot), invited to the repository with the **Write** role, never Maintain or Admin | the agent can push branches and open pull requests, but cannot change the ruleset |
+| The ruleset from `shilaycow-setup` active on the default branch | `main` changes only through a pull request you merge |
+| Sessions that act as the bot: in a cloud environment, GitHub connected on claude.ai as the bot account, with the Claude GitHub App installed on the repository; on your own computer, `git` and `gh` logged in as the bot | acting as you would put the agent past the ruleset |
+| Permission for the session to push `task/`, `work/` and `spike/` branches. A cloud session may push only its own `claude/…` branch until you allow more, so say so when you start it | the task's work lives on those branches |
+| A token of the bot that can read the repository, saved where the gate can use it: in a cloud environment, a network secret for `api.github.com` (header `Authorization: Bearer <token>`); on your own computer, `GITHUB_TOKEN` or `gh` logged in as the bot. For a public repository, a fine-grained token with **Public repositories** access and no permissions; for a private one, a classic token with the `repo` scope, since a fine-grained token cannot select a repository another account owns | the gate asks GitHub itself who the session is, what role the bot holds, and whether the ruleset is active |
+| Network access to `github.com` (installing the skills, `git`) and `api.github.com` (the gate). Saving the network secret above also allows `api.github.com` | |
+| Python 3.9 or later in the session | the gate is a Python script |
+| Sessions able to start other sessions, for the independent verifier, and a setup script that installs the skills in every one of them from a source any session can reach, such as the script below. A verifier session carries only the repository it judges, so a script that copies the skills from another repository gives it none; it then stops and says so. Where the agent cannot start sessions, it falls back to a subagent and says so in the report | the verifier must share nothing with whoever built the work |
+
+Not meant for projects with production environments, real users or real data (see Limits).
 
 ## Install
 
@@ -38,12 +58,15 @@ git clone -q --depth 1 https://github.com/pitaya943/shilaycow.git /tmp/shilaycow
   || echo "shilaycow skills were not installed"
 ```
 
-Every session started in that environment has the skills as `/shilaycow-chief`, `/shilaycow-sharpen`, and so on. A plugin installed on your own computer is not available in cloud sessions, so use the script there. To stay on one version, add `--branch v0.3.2` to the `git clone`.
+Every session started in that environment has the skills as `/shilaycow-chief`, `/shilaycow-sharpen`, and so on. A plugin installed on your own computer is not available in cloud sessions, so use the script there. To stay on one version, add `--branch v0.4.0` to the `git clone`.
+
+**Upgrading from 0.3.x:** version 0.4 is not compatible. Follow the steps in [CHANGELOG.md](CHANGELOG.md) before your next task.
 
 ## Get started
 
-1. **Once per repository**, if you want the agent to work unattended: run `/shilaycow-setup`. It walks you through the two steps only you can do on github.com (invite a bot account as a Write collaborator, import the ruleset that protects `main`), writes `.shilaycow/config.yml`, and opens a pull request for you to merge.
-2. **For every task**, start with `/shilaycow-chief` and describe what you want. Nothing runs unattended until you approve its brief and say start.
+1. **Once per repository**, if you want the agent to work unattended (auto mode): run `/shilaycow-setup`. Without it every skill still works in manual mode, where you call each one yourself. It walks you through the two steps only you can do on github.com (invite a bot account as a Write collaborator, import the ruleset that protects `main`), writes `.shilaycow/config.yml`, and opens a pull request for you to merge.
+2. **For every task**, start with `/shilaycow-chief` and describe what you want. Discuss as long as you like; it writes the brief on the task's branch.
+3. **When you approve the brief**, type `/shilaycow-autopilot`. It runs a gate first (auto mode is on, it acts as the bot, the brief is complete and is the version you approved, no other task is open) and starts nothing unless every check holds; if one fails it tells you what to fix. Nothing else starts the unattended part, whatever you type to the Chief.
 
 Skipping step 1 is fine: every skill works on its own in your session, and nothing is merged for you.
 
@@ -51,7 +74,8 @@ Skipping step 1 is fine: every skill works on its own in your session, and nothi
 
 ```text
 /shilaycow-chief add CSV export to the reports page
-/shilaycow-chief resume csv-export
+/shilaycow-autopilot
+/shilaycow-autopilot csv-export
 /shilaycow-status
 /shilaycow-sharpen users keep asking for dark mode
 /shilaycow-how how does a session token get refreshed?
@@ -65,7 +89,7 @@ Skipping step 1 is fine: every skill works on its own in your session, and nothi
 
 ## Which skill should I use?
 
-**Most of the time: `/shilaycow-chief`.** Use it for anything that changes how your product behaves. It sharpens the request into scenarios with you, then plans, builds, verifies and reports on its own, calling the other skills as it needs them. Start it again with the same task to resume.
+**Most of the time: `/shilaycow-chief`, then `/shilaycow-autopilot`.** Use them for anything that changes how your product behaves. The Chief sharpens the request into scenarios with you; autopilot then plans, builds, verifies and reports on its own, calling the other skills as it needs them. Run `/shilaycow-autopilot` again to resume a run, or `/shilaycow-chief` again to go on talking about the brief.
 
 The rest are for when you want one practice on its own:
 
@@ -88,7 +112,7 @@ The rest are for when you want one practice on its own:
 | Early | [shilaycow-why](plugin/skills/shilaycow-why/SKILL.md) | you need to know why something is the way it is, from the record |
 | Throughout | [shilaycow-spec](plugin/skills/shilaycow-spec/SKILL.md) | `docs/spec/` should describe what the whole system does now |
 | Middle | [shilaycow-design](plugin/skills/shilaycow-design/SKILL.md) | a brief is approved and the system's shape should come from its scenarios |
-| Middle | [shilaycow-plan](plugin/skills/shilaycow-plan/SKILL.md) | the work should be cut into tickets and milestones |
+| Middle | [shilaycow-plan](plugin/skills/shilaycow-plan/SKILL.md) | the work should be cut into tickets |
 | Middle | [shilaycow-prove](plugin/skills/shilaycow-prove/SKILL.md) | you change behaviour and must prove it, never with a test that cannot fail |
 | Late | [shilaycow-verify](plugin/skills/shilaycow-verify/SKILL.md) | a pull request needs a PASS or FAIL from a session that built none of it |
 | Late | [shilaycow-try-it](plugin/skills/shilaycow-try-it/SKILL.md) | your project needs its own skill for starting and driving the app |
@@ -97,7 +121,8 @@ The rest are for when you want one practice on its own:
 | Late | [shilaycow-report](plugin/skills/shilaycow-report/SKILL.md) | someone has to decide whether to merge |
 | End of cycle | [shilaycow-retro](plugin/skills/shilaycow-retro/SKILL.md) | a task is finishing and its pitfalls should not repeat |
 | End of cycle | [shilaycow-correct](plugin/skills/shilaycow-correct/SKILL.md) | the same class of mistake has happened twice |
-| Composition | [shilaycow-chief](plugin/skills/shilaycow-chief/SKILL.md) | you hand over a whole task |
+| Composition | [shilaycow-chief](plugin/skills/shilaycow-chief/SKILL.md) | you hand over a whole task: agree its brief first |
+| Composition | [shilaycow-autopilot](plugin/skills/shilaycow-autopilot/SKILL.md) | the brief is approved: check that everything is ready, then run it unattended |
 | Setup | [shilaycow-setup](plugin/skills/shilaycow-setup/SKILL.md) | a repository needs the bot, the ruleset and the config, or a check that they still hold |
 | Setup | [shilaycow-status](plugin/skills/shilaycow-status/SKILL.md) | you want to know where a task stands, without changing anything |
 | Throughout | [shilaycow-principles](plugin/skills/shilaycow-principles/SKILL.md) | writing or reviewing code: the judgements a good engineer applies |

@@ -11,11 +11,11 @@ Assume every contributor is an agent that sees only the files it opened, copies 
 
 ## Inputs
 
-Entries in `.shilaycow/pitfalls.md` with a count of 2 or more, and the commits, pull requests and review comments behind them.
+Entries in `.shilaycow/pitfalls.md` with a count of 2 or more that are not yet under `## Guarded`, and the commits, pull requests, review comments and `later` issues behind them.
 
 ## Done when
 
-For each such class there is a proposal and a pull request that fixes it at the highest rung that works:
+For each such class there is a change that fixes it at the highest rung that works:
 
 1. **Architecture**: one owner per piece of state, one supported way per task, internals hidden so the wrong import fails, old ways deleted so they cannot be copied.
 2. **Types**: the bad state cannot be written.
@@ -23,7 +23,7 @@ For each such class there is a proposal and a pull request that fixes it at the 
 4. **A test** of the behaviour.
 5. **Documentation**, last.
 
-And the new guard is shown failing on every past instance the pitfall entry lists, then passing on the fix. Re-apply each past mistake in turn and run the guard; one it does not catch is not covered. Remove the pitfall entry only if all of it is covered; otherwise cut the entry down to the part that still rests on someone remembering.
+And the new guard is shown failing on every past instance the pitfall entry lists, then passing on the fix. Re-apply each past mistake in turn and run the guard; one it does not catch is not covered. If all of the entry is covered, move it under `## Guarded` as one line: what it was, its `Sources:`, and the guard. Never drop the sources: the next fold reads them to know a Retro is already in. Otherwise cut the entry down to the part that still rests on someone remembering.
 
 ## How
 
@@ -36,4 +36,4 @@ Write the proposal for the owner in plain words: how many times this happened (w
 
 ## Outputs
 
-A proposal (in the report or the tracking issue) and a pull request. Only the owner merges it.
+Usually scenarios in the brief of the next task, proposed by `/shilaycow-chief` and built as that task's tickets, so the change is verified with it. Called on its own, a proposal and a pull request. Only the owner merges either.

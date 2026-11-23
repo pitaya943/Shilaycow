@@ -1,6 +1,6 @@
 ---
 name: shilaycow-blast-radius
-description: Use before a change to shared code ships, and before a task branch goes to main, to find what it could break elsewhere and prove the facts its safety rests on by running code.
+description: Use before a change to shared code ships, and before a task branch goes to main, to find what it could break elsewhere and prove the facts its safety rests on by running code. Also sets a ticket's risk level, which decides how closely it is verified.
 ---
 
 # Blast radius
@@ -28,6 +28,16 @@ Every fact reached step 3, 4 or 5, or says what made that impossible.
 Look where a search does not: implicit ordering, shared state, defaults, serialised formats, what other code assumes about a return shape, what runs at import or start-up. Step 4 is usually one short script that imports what the app ships and calls the exact function. When an implementation is swapped behind an interface that is meant to stay the same, the script sends ordinary and extreme inputs (very large, very small, empty, malformed) to the old code and the new and compares every answer; do it before the first ticket is verified, not only at the end.
 
 Do not hand back an essay. Hand back the facts, the level each reached, and the output that proves it.
+
+## Risk level
+
+Every ticket, and any work the Chief does itself, gets one level from what it touches, never from how large it is. The highest that applies wins:
+
+- **high**: a data model or migration, authentication or permissions, money, anything irreversible or external, concurrency, code that most of the system calls (count the callers), or anything in the brief's Critical areas;
+- **medium**: code or an interface that something else calls;
+- **low**: none of these, such as documents, tests, or code inside one module that nothing else calls.
+
+Write it with the signal that set it: `Risk: high (writes the orders table)`. Planning estimates it from the ticket; the verifier sets it again from the actual diff, and may raise it but never lower it.
 
 ## Stop when
 

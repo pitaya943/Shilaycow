@@ -7,7 +7,7 @@
     {
       "name": "shilaycow",
       "source": "./plugin",
-      "description": "Standalone skills for each phase of development, a Chief mode that composes them, and one server-side boundary that keeps agents out of main."
+      "description": "Standalone skills for each phase of development, an auto mode that composes them behind a gate, and one server-side boundary that keeps agents out of main."
     }
   ]
 }

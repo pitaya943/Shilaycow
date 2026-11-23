@@ -23,18 +23,21 @@ An area is a part of the system as its users would name it (accounts, billing, s
 - the tasks that last changed the area;
 - **Not yet built**, only while a larger plan is agreed and not finished: scenarios the owner approved that are not built yet. The task that builds one moves it up to Scenarios.
 
+While work is a chain of tasks, `docs/spec/roadmap.md` lists them in order, each with its slug, one line on what a user can do once it is merged, the Not yet built scenarios it will build, and its pull request once there is one. Every Not yet built scenario belongs to exactly one task in it. The index links to it.
+
 And when a task has been folded in:
 
 - every scenario it added is there, and every scenario it changed reads as the system now behaves, with the old wording gone;
 - scenarios it removed are gone;
 - the brief's assumptions that were built are under Rules;
-- nothing left in the spec is made false by the work.
+- nothing left in the spec is made false by the work;
+- in a chain, the task's line in the roadmap names its pull request, and the tasks after it are re-cut if this one showed the order was wrong.
 
 The spec changes in the same pull request as the code, so the two are judged and merged together.
 
 ## How
 
-Write in the present tense, with these headings in English. Scenarios holds only what is true now; the one place for what is agreed but not built is Not yet built. A spec from an earlier version may use 情境, 規則 and 尚未建置: read them as Scenarios, Rules and Not yet built, and rename them in the area you are folding into. The spec has no history: that is in `docs/tasks/` and the trail. Fold by area, not by task: a section per task turns the spec back into a history.
+Write in the present tense, with these headings in English. Scenarios holds only what is true now; the one place for what is agreed but not built is Not yet built. The spec has no history: that is in `docs/tasks/` and the trail. Fold by area, not by task: a section per task turns the spec back into a history.
 
 Let the tree grow only when it has to. A small system is one area file. When an area grows past what a reader can hold at once (about 150 lines is a fair sign), make it a folder, `<area>/index.md` with a file for each part, and keep the links in the index working.
 

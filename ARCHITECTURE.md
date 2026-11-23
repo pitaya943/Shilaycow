@@ -7,7 +7,7 @@ This document explains the harness as a system: what it is made of, what it guar
 1. [The idea in one paragraph](#1-the-idea-in-one-paragraph)
 2. [Three layers](#2-three-layers)
 3. [The boundary: what the agent cannot do](#3-the-boundary-what-the-agent-cannot-do)
-4. [Levels: how much the agent merges on its own](#4-levels-how-much-the-agent-merges-on-its-own)
+4. [Modes: manual or auto](#4-modes-manual-or-auto)
 5. [Roles: Owner, Chief, builder, verifier](#5-roles-owner-chief-builder-verifier)
 6. [The life of a task](#6-the-life-of-a-task)
 7. [Verification: how a verdict is reached](#7-verification-how-a-verdict-is-reached)
@@ -34,11 +34,11 @@ Two kinds of rule follow from this, and every rule in the harness is one or the 
 
 ## 2. Three layers
 
-<p align="center"><img src="assets/diagrams/01-three-layers.png" width="1047" alt="Three layers. Grown guards (pitfalls, then types, lint and tests, then CI checks), from retro and correct, are read by the next task. The method layer (early: sharpen, how, why, spec; middle: design, plan, prove; late: verify, try-it, blast-radius, trail, report; end of cycle: retro, correct) works inside the permission layer, which is fixed and enforced by GitHub: a bot account with the Write role only, a ruleset on main requiring a pull request and one approval with no force push or deletion, and merge_unit choosing Level 1 to 4."></p>
+<p align="center"><img src="assets/diagrams/01-three-layers.png" width="1047" alt="Three layers. Grown guards (pitfalls, then types, lint and tests, then CI checks), from retro and correct, are read by the next task. The method layer (early: sharpen, how, why, spec; middle: design, plan, prove; late: verify, try-it, blast-radius, trail, report; end of cycle: retro, correct) works inside the permission layer, which is fixed and enforced by GitHub: a bot account with the Write role only, a ruleset on main requiring a pull request and one approval with no force push or deletion, and the mode, manual or auto."></p>
 
-- **The permission layer** is set up once per repository with `shilaycow-setup` and never changes between levels.
-- **The method layer** is the same at every level. At Level 1 you call the skills yourself; from Level 2 up, the Chief calls the same skills.
-- **Grown guards** belong to no level. A new project ships with none; each one is added because a mistake actually happened twice in that project.
+- **The permission layer** is set up once per repository with `shilaycow-setup` and is needed only for auto mode.
+- **The method layer** is the same in both modes. In manual mode you call the skills yourself; in auto mode the Chief calls the same skills.
+- **Grown guards** belong to neither mode. A new project ships with none; each one is added because a mistake actually happened twice in that project.
 
 ---
 
@@ -53,7 +53,7 @@ Every action with a large blast radius (irreversible, external, or costly) gets 
 | Changing CI workflows | could disable required checks | the bot's credentials carry no workflow permission | Server side |
 | Reading or leaking secrets | cannot be taken back | the cloud environment holds no secrets | Configuration |
 | External side effects (deploy, email, paid APIs) | cannot be taken back | the environment's network allows package registries only; no deploy credentials | Configuration |
-| Runaway spending | money and quota | each task has an hours and sessions budget | Written rule |
+| Runaway spending | money and quota | the limits of your Claude plan or API account; a run also ends when a defect survives `fix_rounds` or you say stop | Your account |
 | Touching another session's branch | destroys someone else's work | each session pushes only its own branch; only the Chief merges into the task branch | Written rule |
 
 **Deliberately not guarded:** files outside a ticket's scope, test configuration, commit authorship, destructive commands inside the container. All of these happen on a branch you can delete or in a container that is thrown away. If one of them keeps causing trouble in your project, it becomes that project's own guard (section 9).
@@ -64,29 +64,25 @@ The boundary holds without the agent reading a single word. That is why it is th
 
 ---
 
-## 4. Levels: how much the agent merges on its own
+## 4. Modes: manual or auto
 
-Every level is measured with one ruler: **what is the unit you, the owner, merge?** It is one value in the config:
+There are two ways to use the harness, and the config says which with one value:
 
 ```yaml
 # .shilaycow/config.yml
-merge_unit: task     # change | ticket | milestone | task
+mode: auto     # manual | auto
 ```
 
-| Level | `merge_unit` | You merge | The agent acts as | The agent merges, on its own | Dispatched by | Setup |
-|---|---|---|---|---|---|---|
-| 1 | `change` | every change | you | nothing | you, skill by skill | none |
-| 2 | `ticket` | one pull request per ticket | the bot | nothing | the Chief | `shilaycow-setup` once |
-| 3 | `milestone` | one pull request per milestone | the bot | tickets into `task/<slug>` | the Chief | same as Level 2 |
-| 4 | `task` | one pull request per task | the bot | everything into `task/<slug>` | the Chief | same as Level 2 |
+| Mode | Who calls the skills | You merge | The agent acts as | The agent merges, on its own | Setup |
+|---|---|---|---|---|---|
+| `manual` (no config) | you, skill by skill | whatever you choose | you | nothing | none |
+| `auto` | the Chief: `/shilaycow-chief` agrees a brief with you, `/shilaycow-autopilot` runs it | one pull request per task | the bot | tickets into `task/<slug>` | `shilaycow-setup` once |
 
-Levels 2 to 4 need the same GitHub setup; moving between them is one line in the config. At no level does the agent merge `main`.
+In both modes the agent never merges `main`. In auto mode every task has the same shape, whatever its size: a branch `task/<slug>` created when the task begins, every file about the task in `docs/tasks/<slug>/` on that branch, tickets built on `work/` branches and merged into it by the Chief, and one pull request into `main` at the end. Work too large to review as one pull request becomes a chain of tasks (section 6.4), not a larger task.
 
-What the branches look like at Level 4, with two tickets:
+What the branches look like, with two tickets:
 
-<p align="center"><img src="assets/diagrams/03-level-4-branches.png" width="670" alt="Branches at Level 4. From main, a task branch receives the brief, design and plan. Ticket T-01 is built on its own work branch and the Chief merges it into the task branch; the same for T-02. The task branch then gets the spec update and the final report, and you merge the task into main."></p>
-
-At Level 3 the same thing happens once per milestone; at Level 2 each `work/` branch opens its pull request straight into `main`, and there is no `task/` branch.
+<p align="center"><img src="assets/diagrams/03-task-branches.png" width="670" alt="Branches in auto mode. From main, a task branch receives the brief, design and plan. Ticket T-01 is built on its own work branch and the Chief merges it into the task branch; the same for T-02. The task branch then gets the spec update and the final report, and you merge the task into main."></p>
 
 ---
 
@@ -94,14 +90,14 @@ At Level 3 the same thing happens once per milestone; at Level 2 each `work/` br
 
 | Role | Who | Does | Never does |
 |---|---|---|---|
-| **Owner** | you | approves the brief, says "start", answers `needs-owner` issues, merges `main` | — |
-| **Chief** | the session you start with `shilaycow-chief` | agrees the brief with you, plans, dispatches, merges tickets into the task branch, writes the report, opens the pull request into `main` | push to or merge `main`; verify its own work |
+| **Owner** | you | approves the brief, starts the run with `/shilaycow-autopilot`, answers `needs-owner` issues, merges `main` | — |
+| **Chief** | the session you start with `/shilaycow-chief`, which goes on unattended once you type `/shilaycow-autopilot` | agrees the brief with you, plans, dispatches, merges tickets into the task branch, writes the report, opens the pull request into `main` | push to or merge `main`; verify its own work |
 | **Builder** | a subagent of the Chief, one per ticket, in its own worktree | builds one ticket, proves each behaviour, opens a pull request, posts `Ready.` | change the brief; push outside its branch |
 | **Verifier** | a new session that shares nothing with the builders | judges one head commit cold and posts `PASS` or `FAIL` | fix code, push, merge, or coach the builder |
 
 All roles act as the same bot account, so they are told apart by session: every `Ready.` and every verdict carries a `Session:` line, and the Chief rejects a `PASS` whose session matches the Chief's own or any builder's.
 
-<p align="center"><img src="assets/diagrams/04-roles.png" width="930" alt="Roles over time. You describe the task; the Chief says back what it understood and writes brief.md on the task branch. You approve and say start. The Chief opens a tracking issue, then for each ticket gives a builder its role file and the ticket; the builder pushes a work branch, opens a pull request and posts Ready. When the care level is careful, or the Chief judges it worth it, a verifier judges that pull request. The Chief merges each ticket into the task branch, then updates the spec, writes the final report and opens the pull request into main, which a verifier judges on its exact head commit. The Chief posts findings, Retro and Finished, and you merge or send it back."></p>
+<p align="center"><img src="assets/diagrams/04-roles.png" width="943" alt="Roles over time. You describe the task; the Chief says back what it understood and writes brief.md on the task branch. You approve it and type /shilaycow-autopilot, which runs a gate checking the config, the bot identity, the ruleset and the brief; only if every check holds does the run go on unattended. The Chief opens a tracking issue, then for each ticket gives a builder its role file and the ticket; the builder pushes a work branch, opens a pull request and posts Ready. When the ticket's risk is high, or the Chief judges it worth it, a verifier judges that pull request. The Chief merges each ticket into the task branch, then updates the spec, writes the final report and opens the pull request into main, which a verifier judges on its exact head commit. The Chief posts findings, Retro and Finished, and you merge or send it back."></p>
 
 The builder never starts its own verifier: whoever is being judged does not write the judge's instructions.
 
@@ -109,9 +105,11 @@ The builder never starts its own verifier: whoever is being judged does not writ
 
 ## 6. The life of a task
 
-A task has two halves with one explicit handover: **your "start"**.
+A task has two halves with one explicit handover: **you type `/shilaycow-autopilot`**.
 
-- **The first half is a conversation.** `shilaycow-sharpen` says back what you asked for in its own words, then turns it into a brief of plain Given / When / Then scenarios. You can also design together here. The Chief dispatches nobody until you say start. Whatever is agreed is written to files on the task branch as you go, so nothing depends on the conversation surviving.
+- **The first half is a conversation, with `/shilaycow-chief`.** `shilaycow-sharpen` says back what you asked for in its own words, then turns it into a brief of plain Given / When / Then scenarios. You can also design together here, and ask or discuss as long as you like: nothing you say to the Chief starts the run, not even "start". Whatever is agreed is written to files on the task branch as you go, so nothing depends on the conversation surviving.
+- **The handover is a command, not a sentence.** Words can be misread; a command cannot. `/shilaycow-autopilot` first runs a gate, a script with one right answer for each check: auto mode is on, the session acts as the bot, `main` has its ruleset (a pull request with at least one approval is required, and any other difference from the shipped `ruleset.json` is named as a warning), exactly one task is open, and its brief has every heading filled in with scenarios written as Given / When / Then and is the very version you approved: when you approve it, the Chief records a `brief-approved` row with the brief's commit, and the gate refuses a brief changed since. Approving and starting are two separate acts, by two parties: the Chief records your approval, and only you type the command. It also flags scenarios that promise more than a check could show. If anything fails, it changes nothing and tells you what to fix. Text you type after the command is never taken as an instruction. Neither skill can be started by the model on its own; only you can type them.
+- **On a resume,** the gate also notices if the brief changed after the run started, and the run goes on only if you approved that change in a comment on the tracking issue, from your own account.
 - **The second half is unattended.** The Chief decides everything else: whether a design is needed, how to cut the work, whether to build itself or dispatch builders, which tickets deserve their own verification.
 
 ### 6.1 The task as a state machine
@@ -121,41 +119,49 @@ A task has two halves with one explicit handover: **your "start"**.
 Two exits apply from **any** unattended state, so they are not drawn as arrows:
 
 - **Waiting on you:** the agent needs something from the boundary table. It opens a `needs-owner` issue, carries on with whatever that does not block, and resumes the rest once you answer.
-- **Stopped:** the budget is used up, the same failure survived `fix_rounds` rounds, or you wrote "stop" on the tracking issue. The run ends; starting `shilaycow-chief` again resumes from what is on GitHub (section 11).
+- **Stopped:** a defect survived `fix_rounds` rounds, or you wrote "stop" on the tracking issue. The run ends; running `/shilaycow-autopilot` again resumes from what is on GitHub (section 11).
 
 | State | What is true | Written where |
 |---|---|---|
 | Sharpening | the Chief is restating and asking about outcomes only | `docs/tasks/<slug>/brief.md` |
-| Approved | you said start; the level and budget are fixed for the task | first line of the tracking issue |
+| Approved | you typed `/shilaycow-autopilot` and the gate held | first line of the tracking issue, and an `autopilot-start` row in the trail |
 | Planning | the work is cut into tickets someone could pick up cold | `plan.md`, `tickets/T-nn.md` |
 | Building | tickets are being built, proven and merged into the task branch | `work/<slug>/T-nn` pull requests |
 | Finishing | `docs/spec/` is brought up to date, the final report is written | `docs/spec/`, `reports/final.md` |
 | Judging | an independent session is checking the exact head commit | verdict comment on the pull request |
-| Fixing | one fix round; at most `fix_rounds` (default 2) | a new head commit |
+| Fixing | one fix round fixes the whole class a FAIL names; at most `fix_rounds` (default 2) while a defect remains; once only gaps remain, the pull request goes to you with them listed | a new head commit |
 | Wrapping | everything after the verdict goes on GitHub, so the judged commit stays the one you merge | comments on the pull request and tracking issue |
 | AwaitingOwner | a pull request you can read, try and merge | the pull request |
 
 ### 6.2 A ticket as a state machine
 
-<p align="center"><img src="assets/diagrams/06-ticket.png" width="620" alt="A ticket's life. Open, written by plan; the Chief dispatches a builder and it is in progress. It becomes blocked when the ticket contradicts the brief, a test looks wrong, or a secret or deploy is needed; the Chief re-cuts or asks you, and it is open again. When the suite passes, its status is done and the builder posts Ready on a pull request. If the care level is careful or the Chief asks, it is verified: FAIL sends it back for a fix round, PASS merges it into the task branch. Otherwise it is merged without its own verdict."></p>
+<p align="center"><img src="assets/diagrams/06-ticket.png" width="620" alt="A ticket's life. Open, written by plan; the Chief dispatches a builder and it is in progress. It becomes blocked when the ticket contradicts the brief, a test looks wrong, or a secret or deploy is needed; the Chief re-cuts or asks you, and it is open again. When the suite passes, its status is done and the builder posts Ready on a pull request. If its risk is high or the Chief asks, it is verified: FAIL sends it back for a fix round, PASS merges it into the task branch. Otherwise it is merged without its own verdict."></p>
 
-### 6.3 The care level
+### 6.3 Risk, per ticket
 
-The brief has one dial between speed and assurance. It sets the least the Chief does; it may always do more.
+How closely work is checked depends on what it touches, not on how big the task is. A large task often splits into many tickets that could not do much harm, while one small ticket can sit at the core of the system. So every ticket, including any work the Chief does itself, carries a risk level, set by `shilaycow-blast-radius`:
 
-| Care level | Suited to | At least |
+| Risk | When (the highest that applies) | Verification |
 |---|---|---|
-| fast | prototypes, small tools | the final verification checks behaviour only |
-| normal (default) | ordinary features | the final verification also reads the code |
-| careful | shared code, data models, public interfaces | design first and weigh a second shape; verify every ticket; run `shilaycow-blast-radius` before the pull request |
+| low | documents, tests, or code inside one module that nothing else calls | tests, scenarios, the real thing; the diff is scanned, not read closely, to confirm it touches only what its level says |
+| medium | code or an interface that something else calls | every check |
+| high | a data model or migration, authentication or permissions, money, anything irreversible or external, concurrency, code most of the system calls, or anything in the brief's **Critical areas** | every check, every behaviour broken rather than a sample, and `shilaycow-blast-radius` on the ticket's diff; designed with a second shape weighed, and verified on its own before it is merged into the task branch |
+
+Planning estimates each level from the ticket. The verifier sets it again from the actual diff and may raise it, never lower it, so the work being judged never decides how lightly it is judged. Changes that came from no ticket count as at least medium. Critical areas are your one input here: the parts of your system where any change matters, which the code alone cannot tell the agent. The final report lists every ticket with its level, so you can see where verification was light.
+
+Every pull request into `main` that changes the system's code also gets `shilaycow-blast-radius` against `main`.
 
 ### 6.4 Large systems: a chain of tasks
 
 One pull request for a whole system would be too large to review. Large work becomes a chain of tasks, and **the first task's deliverable is the specification itself**:
 
-<p align="center"><img src="assets/diagrams/07-chain-of-tasks.png" width="611" alt="A large system as a chain of tasks. Task 0 explores and writes the spec, documents only, putting scenarios under Not yet built in docs/spec/. Task 1, the first usable slice, and Task 2, the next slice, each move their scenarios to Scenarios in docs/spec/."></p>
+<p align="center"><img src="assets/diagrams/07-chain-of-tasks.png" width="611" alt="A large system as a chain of tasks. Task 0 explores and writes the spec and the roadmap, documents only, putting scenarios under Not yet built in docs/spec/. Task 1, the first usable slice, and Task 2, the next slice, each move their scenarios to Scenarios in docs/spec/."></p>
 
 Each task still merges once, and the spec lands in `main` independently: even if a later task is thrown away, the spec stays.
+
+The chain itself is written down in `docs/spec/roadmap.md`: the tasks in order, what a user can do after each, and which Not yet built scenarios each one will build, so every such scenario belongs to exactly one task. `shilaycow-sharpen` proposes it when it sees that a request is several tasks, ordering them so that what is hardest to change later comes first, nothing comes before what it depends on, and every task after the first leaves something you can try. Each task still starts with its own brief and your own start: the Chief reads the roadmap to know which task is next, and marks the task's line with its pull request when it finishes. You approve and merge every task; the chain never runs on by itself.
+
+Task 0 has nothing to run, so its verification is different: instead of tests and a try-it run, the verifier checks that the scenarios sit under Not yet built, match the brief, contradict nothing already built, each have a place in the design, and each belong to one task of the roadmap.
 
 ---
 
@@ -163,13 +169,16 @@ Each task still merges once, and the spec lands in `main` independently: even if
 
 `shilaycow-verify` runs in a session that built none of the work, on a clean checkout of one head commit. It treats the builder's claims as claims, not evidence.
 
-<p align="center"><img src="assets/diagrams/08-verification.png" width="738" alt="How a verdict is reached. On a clean checkout of the head commit, a session that built any of the work stops: someone else verifies. Otherwise it runs six checks, each with evidence: tests, scenarios, the real thing, tests that can fail, what went unsaid, and the code itself (skipped at care level fast). Any FAIL condition gives Verification: FAIL with which check, how to reproduce and what was seen; otherwise Verification: PASS, with findings for everything else."></p>
+<p align="center"><img src="assets/diagrams/08-verification.png" width="738" alt="How a verdict is reached. On a clean checkout of the head commit, a session that built any of the work stops: someone else verifies. Otherwise it runs six checks, each with evidence: tests, scenarios, the real thing, tests that can fail, what went unsaid, and the code itself (only scanned for low-risk work). Any FAIL condition gives Verification: FAIL with which check, whether it is a defect or a gap, how to reproduce, what was seen and where else the same kind of mistake was searched for; otherwise Verification: PASS, with findings for everything else."></p>
 
 Rules that make the verdict trustworthy:
 
 - **Evidence is a command and its output, a screenshot, a file and line.** Never a sentence.
 - **One verdict per head commit.** A new commit needs a new verdict, and nothing is pushed after the verdict on the pull request you merge.
 - **A finding never turns a PASS into a FAIL, and is never left out to keep a PASS clean.**
+- **Every failed item is a defect or a gap.** A gap means users can already do what the scenario says and the verifier saw it work; only the proof or the documents around it fall short. At high risk every failed item is a defect. Gaps still fail the verdict, but they do not keep the run fixing: once only gaps remain, the pull request comes to you with them listed, each with an issue for a later task.
+- **A FAIL names the class, not one instance.** For each failed item the verifier says where else it searched for the same kind of mistake, so a fix round fixes all of it instead of the one place that was seen.
+- **A fix round is judged by what changed.** A new verifier is given the earlier verdict and checks the full suite, every check that failed, and the diff between the two heads; if that diff changes code the product runs, it does every check again. Merging `main` into the branch is judged the same way and is not counted as a fix round.
 - **No behaviour ships on a test that cannot fail.** This is the only rule in the method layer that is enforced.
 
 ---
@@ -182,8 +191,7 @@ In every other situation the agent writes down its assumption (`shilaycow-trail`
 |---|---|
 | It needs anything from the boundary table: settings, workflows, secrets, a deploy, an external or paid call | opens an issue labelled `needs-owner` with the options and its recommendation, and continues with whatever that does not block |
 | A credential or permission is missing | says what is missing |
-| The same failure survives `fix_rounds` rounds | stops and reports |
-| The budget (hours or sessions) is used up | stops and reports |
+| A defect survives `fix_rounds` rounds | stops and reports |
 | A scenario cannot be met | opens no pull request into `main`; writes down what is missing |
 | You write "stop" on the tracking issue from your own account | ends the run |
 
@@ -193,9 +201,15 @@ In every other situation the agent writes down its assumption (`shilaycow-trail`
 
 A new project starts with the server-side boundary and nothing else. Guards are added one rung at a time, only after a mistake has actually happened.
 
-<p align="center"><img src="assets/diagrams/09-learning.png" width="1137" alt="How guards grow. When a task finishes, shilaycow-retro reads FAIL verdicts, fix rounds and your corrections, and the result is folded into .shilaycow/pitfalls.md, which every builder reads. If the same class of mistake has not happened twice, the next task avoids it. If it has, shilaycow-correct takes the highest rung that works: architecture, types, lint, test, and documentation last. The result is a pull request you merge, a CI change being a proposal you apply, and the pitfall is removed once the guard catches every past instance."></p>
+<p align="center"><img src="assets/diagrams/09-learning.png" width="1137" alt="How guards grow. When a task finishes, shilaycow-retro reads FAIL verdicts, fix rounds, later issues and your corrections, and the next /shilaycow-chief folds the result into .shilaycow/pitfalls.md, each entry citing its sources. If the same class of mistake has not happened twice, the next task avoids it. If it has, shilaycow-correct is proposed as scenarios of the next task and takes the highest rung that works: architecture, types, lint, test, and documentation last. It is built and verified with that task, a CI change being a proposal you apply, and the entry moves to Guarded, keeping its sources, once the guard catches every past instance."></p>
 
 What you find wrong after merging is the most valuable input: it is what verification missed. One comment on the finished tracking issue is enough; the next task reads it first.
+
+The loop runs at the start of the next task, not at the end of this one, so that nothing in it depends on a branch that may be thrown away or a run that may stop early. `/shilaycow-chief` folds every Retro the pitfalls file on `main` does not yet cite, so folding twice changes nothing and a discarded task's lessons are folded again by the next one. It then proposes the `shilaycow-correct` changes that are now due as scenarios of the new task, for you to accept or leave out.
+
+**Gaps and findings wait, on purpose.** A gap (work that does what its scenario says but whose proof or documents fall short) and a finding outside the scenarios are not fixed in the run that found them: each becomes an issue labelled `later`. Patched one by one as they are found, they scatter small fixes across the repository; gathered, they show their shared cause. When a new task touches their area, the Chief offers to fold them in; when many are open or they share a cause, it suggests a task of their own; a class seen in two tasks becomes a pitfall, and then a guard. Defects never wait: they are fixed in the run that found them.
+
+**Within one task, a pitfall that comes back is not patched again.** When a defect's cause matches an entry in the pitfalls file, the fix round first lists every instance of the class and adds a guard that fails on each, the way `shilaycow-correct` would, and only then fixes.
 
 ---
 
@@ -204,21 +218,22 @@ What you find wrong after merging is the most valuable input: it is what verific
 ```text
 .shilaycow/
   config.yml            settings (below)
-  pitfalls.md           mistakes this project has made; builders read it first
+  pitfalls.md           mistakes this project has made, with their sources; builders read it first
+  worktrees/            where builders work; ignored by git
 .claude/skills/
   try-<app>/            how to start and drive your app, made by shilaycow-try-it
 docs/spec/
   index.md              what the system is, its areas, its terms, what it does not do
   <area>.md             the scenarios and rules true in that area today
+  roadmap.md            in a chain of tasks: the tasks in order, and what each will build
 docs/tasks/<slug>/
-  brief.md              goal, out of scope, scenarios, how to try, budget, care level, assumptions
+  brief.md              goal, out of scope, scenarios, how to try, critical areas, assumptions
   design.md             the design, when the task needs one
-  plan.md               milestones and tickets
+  plan.md               the tickets and their order
   tickets/T-<nn>.md     one per ticket
   trail.tsv             every decision made in place of asking
   evidence/             recordings and outputs
-  reports/m<n>.md       checkpoint report per milestone
-  reports/final.md      final report, also the description of the pull request into main
+  reports/final.md      final report; the pull request into main links to it
 AGENTS.md               gains a section pointing at .shilaycow/ and the branch names
 ```
 
@@ -229,7 +244,7 @@ Only two files have a fixed shape, because you read them: `brief.md` (what you a
 | File | Written by | Read by |
 |---|---|---|
 | `config.yml` | `shilaycow-setup`, then only you | every skill |
-| `pitfalls.md` | the next Chief (from `Retro:` comments), `shilaycow-correct` | `shilaycow-plan`, builders |
+| `pitfalls.md` | the next `/shilaycow-chief` (from `Retro:` comments), `shilaycow-correct` | `shilaycow-plan`, builders |
 | `try-<app>` | `shilaycow-try-it`, during the first task | `shilaycow-verify`, `shilaycow-report` |
 | `docs/spec/` | `shilaycow-spec`, before each task's pull request | `shilaycow-sharpen`, `shilaycow-verify`, `shilaycow-how`, builders |
 | `brief.md` | `shilaycow-sharpen` | design, plan, verify, report |
@@ -243,7 +258,7 @@ Only two files have a fixed shape, because you read them: `brief.md` (what you a
 | Branch | Purpose |
 |---|---|
 | `main` | delivered work; only you merge |
-| `task/<slug>` | the task's integration branch (Levels 3 and 4); `docs/tasks/<slug>/` lives here |
+| `task/<slug>` | the task's integration branch in auto mode, created when the task begins; `docs/tasks/<slug>/` lives here |
 | `work/<slug>/T-<nn>` | one ticket's work |
 | `spike/<topic>` | a throwaway prototype; never merged, only its decisions come back |
 
@@ -252,18 +267,15 @@ Only two files have a fixed shape, because you read them: `brief.md` (what you a
 ```yaml
 # .shilaycow/config.yml
 owner: example-owner
-bot: example-bot              # may be empty at Level 1
-merge_unit: task              # change | ticket | milestone | task  (Level 1 to 4)
+bot: example-bot              # may be empty in manual mode
+mode: auto                    # manual | auto
 test_command: ""              # your test command, if any
-budget:
-  hours: 8
-  sessions: 20
 parallel_builders: 2
 fix_rounds: 2
 report_language: en           # briefs and reports; headings stay in English
 ```
 
-With no config, every skill behaves as Level 1. The copy on `main` is the one that counts; you can name another level when starting a task, and a task's level is fixed once it starts.
+With no config, every skill behaves as in manual mode. The copy on `main` is the one that counts. Version 0.4 is not compatible with 0.3: a project set up with 0.3 follows the upgrade steps in the CHANGELOG before its next task.
 
 ---
 
@@ -274,12 +286,12 @@ Nothing important lives in a conversation. Conversations are compressed and sess
 | State | Lives in |
 |---|---|
 | What was agreed | `brief.md`, `design.md` on the task branch |
-| Progress, level, budget | the tracking issue `Task: <slug>`: its first line, then one line each time something lands or waits |
+| Progress | the tracking issue `Task: <slug>`: its first line, then one line each time something lands or waits |
 | Decisions made without asking | `trail.tsv` |
 | Readiness and verdicts | `Ready.` and `Verification:` comments on pull requests, each tied to a head commit and a `Session:` |
 | Questions for you | issues labelled `needs-owner` |
 
-Because of this, starting `shilaycow-chief` again on the same task resumes it: the Chief rebuilds its picture from the repository and GitHub every time. `shilaycow-status` reads the same sources to tell you, without changing anything, what the task is waiting on and what to do next.
+Because of this, running `/shilaycow-autopilot` again on the same task resumes it, after the same gate: the Chief rebuilds its picture from the repository and GitHub every time. `shilaycow-status` reads the same sources to tell you, without changing anything, what the task is waiting on and what to do next.
 
 ---
 
@@ -288,8 +300,8 @@ Because of this, starting `shilaycow-chief` again on the same task resumes it: t
 | Situation | Consequence | What limits it |
 |---|---|---|
 | The final pull request is large and you do not read it closely | a problem reaches `main` | the verifier drives every scenario; the report lists every decision the agent made on its own; your test command can be a required check |
-| The cloud session is connected to your account, not the bot | the agent acts as you and the ruleset does not apply to it | the Chief checks its GitHub identity before any unattended work and stops if it is not the configured bot |
-| Permission prompts are turned off at Level 1 | same as above | documented; cannot be detected |
+| The cloud session is connected to your account, not the bot | the agent acts as you and the ruleset does not apply to it | the autopilot gate checks its GitHub identity before any unattended work and stops if it is not the configured bot |
+| Permission prompts are turned off in manual mode | same as above | documented; cannot be detected |
 | The project gains production, real users or secrets | the boundary table is no longer enough | out of scope; `shilaycow-setup` warns when it sees deploy configuration or secrets |
 | Builder and verifier are the same model on the same account | verification catches honest mistakes only | accepted: the agent is assumed to cooperate and err, not to cheat; you are the final gate |
 | Parallel builders edit the same file | merge conflicts | the Chief runs in parallel only tickets whose areas do not overlap |

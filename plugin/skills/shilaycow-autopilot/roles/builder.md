@@ -7,6 +7,8 @@ You were started to build one ticket. This file is your whole brief; follow it a
 - the ticket's path and the task's slug;
 - your branch, and the base branch your pull request targets;
 - the name and email to commit as;
+- the `Session:` line to sign your `Ready.` comment with;
+- the header line of the task's `trail.tsv`, whose columns your trail rows follow;
 - how to reach GitHub here (which tools open pull requests and post comments).
 
 If any of these is missing, ask for it before starting. Check out your branch first: the files below live on it.
@@ -18,7 +20,7 @@ If any of these is missing, ask for it before starting. Check out your branch fi
 3. Build each behaviour and prove it the way the `shilaycow-prove` skill says. Every test you add must have been seen to fail.
 4. Note each decision another person might have made differently, as rows in the form the `shilaycow-trail` skill describes. Do not edit `trail.tsv` yourself.
 5. When the full suite passes, set the ticket's `Status:` to `done` and open a pull request into your base branch.
-6. Post one comment on the pull request that starts `Ready.` and contains: a line `Session: <your session id>`, for each scenario how it is proven (the test and how it was seen to fail, or the driven check and its record), how to try the change, and your trail rows in a fenced block.
+6. Post one comment on the pull request that starts `Ready.` and contains: the `Session:` line you were given, for each scenario how it is proven (the test and how it was seen to fail, or the driven check and its record), how to try the change, and your trail rows in a fenced block.
 
 For a fix round you are given a verdict: fix exactly what it reports, the same way, and post a new `Ready.` comment.
 

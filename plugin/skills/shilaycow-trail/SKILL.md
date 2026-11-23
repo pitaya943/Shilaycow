@@ -15,13 +15,13 @@ The decision you just made, and where its evidence is.
 
 `docs/tasks/<slug>/trail.tsv` has a row for every point where another reasonable person might have chosen differently: above all an assumption made in place of a question, and anything the owner would be surprised to learn only afterwards.
 
-Each row says what was decided, why in plain words, and where the evidence is: a pointer (commit, pull request, `file:line`), never a paragraph. A timestamp and who decided help. The exact columns are yours.
+Each row says what was decided, why in plain words, and where the evidence is: a pointer (commit, pull request, `file:line`), never a paragraph. With a timestamp and who decided. The file's first line is a header naming its columns; the first writer chooses them, and every row after follows that header, whoever writes it. Take timestamps from the clock (`date -u +%Y-%m-%dT%H:%MZ`), never write them by hand.
 
 ## How
 
 Write the row when you decide, not at the end. Append only: to reverse a decision, add a row. Routine steps are not decisions; do not log them.
 
-A builder working in parallel posts its rows in its pull request's ready comment; whoever merges adds them to the file.
+A builder is given the header and posts its rows, in those columns, in its pull request's `Ready.` comment; the Chief adds them to the file when it merges that pull request into the task branch, fitting any that do not match.
 
 ## Stop when
 
