@@ -135,6 +135,21 @@ def check_brief(report, brief):
                 report.add("WARN", "brief: absolute wording", f"'{line.strip()[:90]}' -> does a finite check really show this?")
 
 
+def commits_after(trail, token):
+    """The commit on each trail row that carries the token, in order. The commit is the first
+    hash after the token on that row, so a model that put the word and the commit in two cells
+    of one row is still read right."""
+    found = []
+    for row in trail.splitlines():
+        at = row.find(token)
+        if at < 0:
+            continue
+        match = re.search(r"\b([0-9a-f]{7,40})\b", row[at + len(token):])
+        if match:
+            found.append(match.group(1))
+    return found
+
+
 def main(argv):
     args = [a for a in argv if not a.startswith("--")]
     report = Report()
@@ -184,7 +199,8 @@ def main(argv):
         report.add("FAIL", "task", "no unmerged task/<slug> branch -> agree a brief with /shilaycow-chief first")
         return finish(report)
     else:
-        report.add("FAIL", "task", f"several open tasks ({', '.join(open_tasks)}) -> name one: /shilaycow-autopilot <slug>")
+        report.add("FAIL", "task", f"several open tasks ({', '.join(open_tasks)}) -> one task runs at a time: "
+                   "merge or delete all but one")
         return finish(report)
     branch = f"task/{slug}"
     if git("rev-parse", "--verify", "--quiet", f"origin/{branch}") is None:
@@ -209,8 +225,8 @@ def main(argv):
     # than the one approved.
     brief_commit = git("log", "-1", "--format=%h", f"origin/{branch}", "--", f"docs/tasks/{slug}/brief.md") or ""
     trail = git("show", f"origin/{branch}:docs/tasks/{slug}/trail.tsv") or ""
-    approvals = re.findall(rf"{APPROVED_TOKEN}\s+([0-9a-f]{{7,40}})", trail)
-    starts = re.findall(rf"{START_TOKEN}\s+([0-9a-f]{{7,40}})", trail)
+    approvals = commits_after(trail, APPROVED_TOKEN)
+    starts = commits_after(trail, START_TOKEN)
     if not approvals and starts:
         # Grew from: a task started before 0.4.0, which has a start and no approval, and which the
         # plain message below called unapproved.

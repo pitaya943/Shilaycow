@@ -1,6 +1,6 @@
 ---
 name: shilaycow-setup
-description: Use once per repository to make GitHub itself keep agents out of main and to write the shilaycow config, or again at any time to check that the real settings still match. Works in a cloud session acting as the bot, where the owner does two steps by hand, or in a local session with the owner's gh.
+description: Use once per repository to make GitHub itself keep agents out of main and to write the shilaycow config, or again at any time to check that the real settings still match. Works in a cloud session acting as the bot, where the owner does three steps by hand, or in a local session with the owner's gh.
 ---
 
 # Setup
@@ -15,7 +15,7 @@ A GitHub repository and its owner in the conversation. Ask one question at a tim
 
 First find out who you are on GitHub, because that decides who does what:
 
-- **You act as the bot** (the usual case in a cloud session). You cannot change repository settings, and that is the point of the boundary. The owner does the two privileged steps by hand on github.com; you do everything else and check the result.
+- **You act as the bot** (the usual case in a cloud session). You cannot change repository settings, and that is the point of the boundary. The owner does the three privileged steps by hand on github.com; you do everything else and check the result.
 - **You act as the owner with admin rights** (a local session with the owner's `gh`). You can do all of it yourself.
 
 ## Done when
@@ -25,8 +25,8 @@ All of these hold, and you have shown the owner what you checked:
 1. The bot account is a collaborator with the Write role, not Admin.
 2. A ruleset on the default branch requires a pull request with one approval, dismisses stale approvals on push, and blocks force pushes and deletion. The only bypass is the repository admin role, for pull requests only: the owner can merge their own pull request without a second approver, and nobody can push to the branch directly. `ruleset.json` beside this file is that ruleset.
 3. The repository setting **Automatically delete head branches** is on, so a branch goes once its pull request is merged. Where your GitHub tools do not show the setting, the owner confirms it.
-4. `.shilaycow/config.yml` exists with `owner`, `bot`, `mode: auto`, `test_command`, `parallel_builders`, `fix_rounds`.
-5. `AGENTS.md` has a section pointing at `.shilaycow/`, naming the branch classes (`task/`, `work/`, `spike/`) and saying only the owner merges `main`; `.gitignore` ignores `.shilaycow/worktrees/`, where builders work.
+4. `.shilaycow/config.yml` exists with `owner`, `bot`, `mode: auto`, `test_command`, `fix_rounds`.
+5. `CLAUDE.md`, which sessions read when they start, has a section pointing at `.shilaycow/` and saying, as the owner's standing permission: agents may create and push `task/`, `work/`, `spike/` and `chore/` branches and the setup branch, never push to `main`, and only the owner merges it. Where the project keeps its rules in `AGENTS.md`, the section goes there and `CLAUDE.md` imports it with a line `@AGENTS.md`; `.gitignore` ignores `.shilaycow/worktrees/`, where builders work.
 6. Items 4 and 5 are on a branch with a pull request open, not pushed to `main`; the labels `needs-owner` and `later` exist on the repository (the bot's Write role can create them).
 7. The owner has a cloud environment whose setup script is `install-skills.sh` beside this file, and knows to start this project's sessions in it. A repository's own plugin settings are not loaded in cloud sessions.
 

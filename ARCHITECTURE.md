@@ -52,7 +52,7 @@ Every action with a large blast radius (irreversible, external, or costly) gets 
 | Changing settings, rulesets or collaborators | would remove the guard above | the bot has the Write role, not Admin | Server side |
 | Changing CI workflows | could disable required checks | the bot's credentials carry no workflow permission | Server side |
 | Reading or leaking secrets | cannot be taken back | the cloud environment holds no secrets | Configuration |
-| External side effects (deploy, email, paid APIs) | cannot be taken back | the environment's network allows package registries only; no deploy credentials | Configuration |
+| External side effects (deploy, email, paid APIs) | cannot be taken back | the environment's network allows package registries and `github.com` only; no deploy credentials | Configuration |
 | Runaway spending | money and quota | the limits of your Claude plan or API account; a run also ends when a defect survives `fix_rounds` or you say stop | Your account |
 | Touching another session's branch | destroys someone else's work | each session pushes only its own branch; only the Chief merges into the task branch | Written rule |
 
@@ -97,9 +97,9 @@ What the branches look like, with two tickets:
 
 All roles act as the same bot account, so they are told apart by session: every `Ready.` and every verdict carries a `Session:` line, and the Chief rejects a `PASS` whose session matches the Chief's own or any builder's.
 
-<p align="center"><img src="assets/diagrams/04-roles.png" width="943" alt="Roles over time. You describe the task; the Chief says back what it understood and writes brief.md on the task branch. You approve it and type /shilaycow-autopilot, which runs a gate checking the config, the bot identity, the ruleset and the brief; only if every check holds does the run go on unattended. The Chief opens a tracking issue, then for each ticket gives a builder its role file and the ticket; the builder pushes a work branch, opens a pull request and posts Ready. When the ticket's risk is high, or the Chief judges it worth it, a verifier judges that pull request. The Chief merges each ticket into the task branch, then updates the spec, writes the final report and opens the pull request into main, which a verifier judges on its exact head commit. The Chief posts findings, Retro and Finished, and you merge or send it back."></p>
+<p align="center"><img src="assets/diagrams/04-roles.png" width="943" alt="Roles over time. You describe the task; the Chief says back what it understood and writes brief.md on the task branch. You approve it and type /shilaycow-autopilot, which runs a gate checking the config, that one task is open and the brief is the one you approved, and has the agent confirm with its own GitHub tools that it acts as the bot; only then does the run go on unattended. The Chief opens a tracking issue, then for each ticket gives a builder its role file and the ticket; the builder pushes a work branch, opens a pull request and posts Ready. When the ticket's risk is high, or the Chief judges it worth it, a verifier judges that pull request. The Chief merges each ticket into the task branch, then updates the spec, writes the final report and opens the pull request into main, which a verifier judges on its exact head commit. The Chief posts findings, Retro and Finished, and you merge or send it back."></p>
 
-The builder never starts its own verifier: whoever is being judged does not write the judge's instructions.
+The builder never starts its own verifier: whoever is being judged does not write the judge's instructions. Every session the Chief starts is closed once its work is done, including one that stopped or stopped answering; a run leaves no session or worktree behind.
 
 ---
 
@@ -270,7 +270,6 @@ owner: example-owner
 bot: example-bot              # may be empty in manual mode
 mode: auto                    # manual | auto
 test_command: ""              # your test command, if any
-parallel_builders: 2
 fix_rounds: 2
 ```
 

@@ -16,7 +16,7 @@ The user's request. `.shilaycow/config.yml` on the default branch. `docs/spec/`,
 
 - `task/<slug>` exists on the remote, and `docs/tasks/<slug>/brief.md` on it has every heading `shilaycow-sharpen` names, the scenarios approved by the user; with a design too, if you designed together.
 - The trail has a `brief-approved <commit>` row for the commit that last changed `brief.md`.
-- You told the user the one way to start: type `/shilaycow-autopilot` (with the slug, if more than one task is open). Nothing runs unattended before that.
+- You told the user the one way to start: type `/shilaycow-autopilot` (`/shilaycow:shilaycow-autopilot` where the skills are installed as a plugin). Nothing runs unattended before that.
 
 ## How
 

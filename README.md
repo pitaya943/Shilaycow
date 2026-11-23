@@ -16,7 +16,7 @@ Quality comes from checking results (an independent verifier, reading the code, 
 
 **Manual mode** (you call each skill yourself) needs only Claude Code and `git`.
 
-**Auto mode** (`/shilaycow-chief`, then `/shilaycow-autopilot` working unattended) needs all of the following. `/shilaycow-setup` walks you through them, and `/shilaycow-autopilot` checks them before every run and starts nothing until they hold.
+**Auto mode** (`/shilaycow-chief`, then `/shilaycow-autopilot` working unattended) needs all of the following. `/shilaycow-setup` walks you through them and checks them again whenever you run it. Before every run, `/shilaycow-autopilot` checks what can change between runs (auto mode is on, one task, the brief you approved) and confirms it acts as the bot.
 
 | Requirement | Why |
 |---|---|
@@ -25,10 +25,10 @@ Quality comes from checking results (an independent verifier, reading the code, 
 | The ruleset from `shilaycow-setup` active on the default branch | `main` changes only through a pull request you merge |
 | The repository setting **Automatically delete head branches** turned on | a task's and its tickets' branches go once merged; tracking issues close when you merge the task, through `Closes #<n>` |
 | Sessions that act as the bot: in a cloud environment, GitHub connected on claude.ai as the bot account, with the Claude GitHub App installed on the repository; on your own computer, `git` and `gh` logged in as the bot | acting as you would put the agent past the ruleset |
-| Permission for the session to push `task/`, `work/` and `spike/` branches. A cloud session may push only its own `claude/…` branch until you allow more, so say so when you start it | the task's work lives on those branches |
+| Permission for sessions to push `task/`, `work/`, `spike/` and `chore/` branches. `/shilaycow-setup` writes it into your repository's `CLAUDE.md`, which every session reads when it starts; a cloud session otherwise pushes only its own `claude/…` branch. If a session still asks, say so in your first message | the task's work lives on those branches |
 | Network access to `github.com` (installing the skills, `git`) | |
 | Python 3.9 or later in the session | the gate is a Python script |
-| Sessions able to start other sessions, for the independent verifier, and a setup script that installs the skills in every one of them from a source any session can reach, such as the script below. A verifier session carries only the repository it judges, so a script that copies the skills from another repository gives it none; it then stops and says so. Where the agent cannot start sessions, it falls back to a subagent and says so in the report | the verifier must share nothing with whoever built the work |
+| Sessions able to start other sessions, for the independent verifier, and a setup script that installs the skills in every one of them from a source any session can reach, such as the script below. A verifier session carries only the repository it judges, so a script that copies the skills from another repository gives it none; it then stops and says so. Where the agent cannot start a session, it stops and says so: a verifier must never share a session with the work | the verifier must share nothing with whoever built the work |
 
 Not meant for projects with production environments, real users or real data (see Limits).
 
@@ -58,13 +58,13 @@ git clone -q --depth 1 https://github.com/pitaya943/shilaycow.git /tmp/shilaycow
   || echo "shilaycow skills were not installed"
 ```
 
-Every session started in that environment has the skills as `/shilaycow-chief`, `/shilaycow-sharpen`, and so on. A plugin installed on your own computer is not available in cloud sessions, so use the script there. To stay on one version, add `--branch v0.4.1` to the `git clone`.
+Every session started in that environment has the skills as `/shilaycow-chief`, `/shilaycow-sharpen`, and so on. Where this README names a command, a plugin install spells it `/shilaycow:shilaycow-…`. A plugin installed on your own computer is not available in cloud sessions, so use the script there. To stay on one version, add `--branch v0.4.2` to the `git clone`.
 
 **Upgrading from 0.3.x:** version 0.4 is not compatible. Follow the steps in [CHANGELOG.md](CHANGELOG.md) before your next task.
 
 ## Get started
 
-1. **Once per repository**, if you want the agent to work unattended (auto mode): run `/shilaycow-setup`. Without it every skill still works in manual mode, where you call each one yourself. It walks you through the two steps only you can do on github.com (invite a bot account as a Write collaborator, import the ruleset that protects `main`), writes `.shilaycow/config.yml`, and opens a pull request for you to merge.
+1. **Once per repository**, if you want the agent to work unattended (auto mode): run `/shilaycow-setup`. Without it every skill still works in manual mode, where you call each one yourself. It walks you through the three steps only you can do on github.com (invite a bot account as a Write collaborator, import the ruleset that protects `main`, turn on automatic deletion of merged branches), writes `.shilaycow/config.yml`, and opens a pull request for you to merge.
 2. **For every task**, start with `/shilaycow-chief` and describe what you want. Discuss as long as you like; it writes the brief on the task's branch.
 3. **When you approve the brief**, type `/shilaycow-autopilot`. It runs a gate first (auto mode is on, the brief is the version you approved, no other task is open; anything off in the brief's shape is a warning, not a stop), and the agent confirms with its own GitHub tools that it acts as the bot. Nothing starts unless every check holds; if one fails, it tells you what to fix. Nothing else starts the unattended part, whatever you type to the Chief.
 

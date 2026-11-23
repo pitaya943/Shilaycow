@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.4.2
+
+- **Branch permission is set once.** `/shilaycow-setup` writes into your repository's `CLAUDE.md` that agents may push `task/`, `work/`, `spike/` and `chore/` branches and never `main`, so you no longer grant it at the start of each session. Projects set up before: run `/shilaycow-setup` again to add it.
+- Fixes from a review of the whole toolkit: builders work on `work/<slug>/T-<nn>` branches, named now, so a resume never takes one for a second task; the gate tells you to merge or drop extra open tasks; an approval row keeps its word and commit in one cell; a resume after an approved brief change records a new start and does not ask again; tickets carry `Status:` and `Risk:` lines; the README describes what the gate checks each run and what setup checks.
+- `parallel_builders` is gone from the config: how many builders run at once is the Chief's call. An existing key is ignored.
+- **A run leaves no session behind.** Each verifier session is closed once it has posted its verdict; one that stops without a verdict or stops answering is closed and replaced once, then reported to you. Builders' worktrees are removed once their tickets merge.
+
 ## 0.4.1
 
 - **English only.** Briefs, specs, reports and verdicts are written in English, whatever language you talk in; `report_language` is gone from the config. To use another language, fork the skills and change them.

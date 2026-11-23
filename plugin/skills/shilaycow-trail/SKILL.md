@@ -15,7 +15,7 @@ The decision you just made, and where its evidence is.
 
 `docs/tasks/<slug>/trail.tsv` has a row for every point where another reasonable person might have chosen differently: above all an assumption made in place of a question, and anything the owner would be surprised to learn only afterwards.
 
-Each row says what was decided, why in plain words, and where the evidence is: a pointer (commit, pull request, `file:line`), never a paragraph. With a timestamp and who decided. The file's first line is a header naming its columns; the first writer chooses them, and every row after follows that header, whoever writes it. Take timestamps from the clock (`date -u +%Y-%m-%dT%H:%MZ`), never write them by hand.
+Each row says what was decided, why in plain words, and where the evidence is: a pointer (commit, pull request, `file:line`), never a paragraph. With a timestamp and who decided. The file's first line is a header naming its columns; the first writer chooses them, and every row after follows that header, whoever writes it. Take timestamps from the clock (`date -u +%Y-%m-%dT%H:%MZ`), never write them by hand. A row the gate reads, `brief-approved <commit>` or `autopilot-start <commit>`, keeps the word and its commit together in one cell, with nothing between.
 
 ## How
 
