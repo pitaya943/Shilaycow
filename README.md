@@ -1,86 +1,111 @@
 # shilaycow
 
-A development harness for Claude Code (the desktop app and cloud sessions):
-
-- **18 skills you can use on their own**, one for each practice in the development cycle.
-- **Chief mode** (`shilaycow-chief`), which composes them so an agent can take a task from a request to a pull request you can merge.
-- **A boundary on GitHub's servers**: whatever the agent does, only you can change `main`.
-
-The idea: loosen the reins on the agent as far as possible, and let the harness protect the repository only where a mistake would cost you. Quality comes from checking results (independent verification, reading the code, breaking a behaviour to see its test fail), not from prescribing a process.
-
-**How it works, with diagrams:** [ARCHITECTURE.md](ARCHITECTURE.md).
-
-Not meant for projects with production environments, real users or real data.
+Skills for Claude Code that take a task from a vague idea to a pull request you can trust, while a server-side boundary keeps the agent out of `main`.
 
 <p align="center">
-  <img src="assets/task-flow.webp" width="480" alt="How a task flows through shilaycow: with you (sharpening, designing together, you say start), then unattended (planning, building, finishing, judging, fixing on FAIL), then your call on GitHub (ready for you, you merge, merged). Underneath: the bot has Write only and a ruleset protects main, so only you can merge.">
+  <img src="assets/task-flow.webp" alt="How a task flows through shilaycow. With you: sharpening, designing together, you say start. Approved, then unattended, the agent acting as a bot: planning, building, finishing, judging, and fixing on FAIL until a new head gets a new verdict. PASS, then your call on GitHub: ready for you, you merge, merged; or you send it back. Underneath: the bot has Write only and a ruleset protects main, so only you can merge.">
 </p>
+
+- **18 skills you can use on their own**, one for each practice in the development cycle.
+- **Chief mode** (`/shilaycow-chief`) composes them: it agrees the task with you, then works unattended through fresh builder and verifier sessions.
+- **A boundary on GitHub's servers**: the agent works as a bot with the Write role only, and a ruleset protects `main`, so only you can merge.
+
+Quality comes from checking results (an independent verifier, reading the code, breaking each behaviour to see its test fail), not from prescribing steps. How it all fits together, with diagrams: **[ARCHITECTURE.md](ARCHITECTURE.md)**.
 
 ## Install
 
-The skills do not go into your project. They are installed where Claude Code reads user-level skills (`~/.claude/skills/`), always with the same command:
+**1. Claude Code (terminal)**
 
 ```bash
-git clone -q --depth 1 https://github.com/pitaya943/shilaycow.git /tmp/shilaycow-src && mkdir -p ~/.claude/skills && cp -r /tmp/shilaycow-src/plugin/skills/. ~/.claude/skills/
+claude plugin marketplace add pitaya943/shilaycow
 ```
 
-### Cloud sessions (the main way to use it)
+```bash
+claude plugin install shilaycow@shilaycow
+```
 
-1. Create a cloud environment in Claude Code and paste the contents of [`plugin/skills/shilaycow-setup/install-skills.sh`](plugin/skills/shilaycow-setup/install-skills.sh) into its **Setup script**. Its network must reach `github.com`.
-2. Start this project's sessions in that environment. Every new session has all the skills from the start; the sessions it starts (builders, verifiers) use the same environment by default, so they have them too. Your project's own `.claude/skills/` (such as `try-<app>`) loads alongside them as usual.
+Plugin skills are namespaced, so you call them as `/shilaycow:shilaycow-chief`, `/shilaycow:shilaycow-sharpen`, and so on. In an open session, the same thing is `/plugin marketplace add pitaya943/shilaycow`, then `/plugin install shilaycow@shilaycow`.
 
-Each session gets the latest version. To stay on one version, add `--branch <tag>` to the script's `git clone`, for example `--branch v0.3.1`. Every version is a tag of this repository.
+**2. Claude Code cloud environment (setup script)**
 
-### Your own computer
+Paste this into the environment's **Setup script**. Its network must reach `github.com`.
 
-Only needed if you want the skills in local sessions: run the command above once in a terminal, and again to update. Every skill name starts with `shilaycow-`, so none of your own personal skills is overwritten. The command copies and never deletes: if a later version removes or renames a skill, delete the old folder yourself.
+```bash
+rm -rf /tmp/shilaycow-src
+git clone -q --depth 1 https://github.com/pitaya943/shilaycow.git /tmp/shilaycow-src \
+  && mkdir -p "${HOME:-/root}/.claude/skills" \
+  && cp -r /tmp/shilaycow-src/plugin/skills/. "${HOME:-/root}/.claude/skills/" \
+  || echo "shilaycow skills were not installed"
+```
 
-### What does not work
+Every session started in that environment has the skills as `/shilaycow-chief`, `/shilaycow-sharpen`, and so on. A plugin installed on your own computer is not available in cloud sessions, so use the script there. To stay on one version, add `--branch v0.3.2` to the `git clone`.
 
-- **Declaring a plugin marketplace in your project's `.claude/settings.json`** (`extraKnownMarketplaces`, `enabledPlugins`): cloud sessions do not load it, and show no error. Claude Code's documentation says so.
-- **`/plugin install` on your own computer:** only local sessions get it; the cloud container does not have it. Beware that the desktop app's menu still shows it in cloud sessions (with a colon, such as `shilaycow:chief`), but choosing it finds nothing. What works in the cloud is the set the setup script installs, named with a hyphen (`shilaycow-chief`). If you installed both, removing the local plugin avoids picking the wrong one.
-- **Copying `plugin/skills/` into your project's `.claude/skills/` and committing it** works, but every project gets its own copy that you must update by hand. Not recommended.
+## Get started
 
-## Start a project
+1. **Once per repository**, if you want the agent to work unattended: run `/shilaycow-setup`. It walks you through the two steps only you can do on github.com (invite a bot account as a Write collaborator, import the ruleset that protects `main`), writes `.shilaycow/config.yml`, and opens a pull request for you to merge.
+2. **For every task**, start with `/shilaycow-chief` and describe what you want. Nothing runs unattended until you approve its brief and say start.
 
-**A few skills on their own (Level 1).** Once installed, call them directly, for example `shilaycow-sharpen`, `shilaycow-how`, `shilaycow-why`, `shilaycow-prove`, `shilaycow-principles`. Nothing else to set up.
+Skipping step 1 is fine: every skill works on its own in your session, and nothing is merged for you.
 
-**Let the agent do whole tasks (Levels 2 to 4).** Everything can be done in a browser and the Claude Code desktop app; no terminal needed.
+## Usage
 
-1. Create a GitHub account for a bot. Connect GitHub on claude.ai to that account, and install the Claude GitHub App on your repository. From then on sessions work as the bot; do not switch the connection in the middle of a session.
-2. In the environment with the skills installed, start a session on your repository and call `shilaycow-setup`. It walks you through the two things only you can do on github.com (invite the bot as a collaborator with the Write role; import the ruleset that protects `main`), and does the rest itself: writes the config, opens a setup pull request, and checks that the rules are in force.
-3. Merge that setup pull request.
-4. Start a session, call `shilaycow-chief` and describe the task. It says back what it understood and writes a brief; only after you approve and say start does the unattended part begin.
-5. Read the final pull request, try it with its "how to try it" steps, and merge. If you find something wrong after merging, leave one comment on the task's tracking issue: that is how the next task learns what verification missed.
+```text
+/shilaycow-chief add CSV export to the reports page
+/shilaycow-chief resume csv-export
+/shilaycow-status
+/shilaycow-sharpen users keep asking for dark mode
+/shilaycow-how how does a session token get refreshed?
+/shilaycow-why why do we retry payments three times?
+/shilaycow-prove the discount must never go below zero
+/shilaycow-verify pull request #42
+/shilaycow-blast-radius I changed the date parser that billing and reports share
+/shilaycow-correct the same timezone bug has come back twice
+/shilaycow-setup
+```
 
-Those two steps must be done by you, because the agent's account must not be able to change repository settings: that is the very boundary protecting `main`.
+## Which skill should I use?
 
-If your computer has `gh` signed in as you, you can also call `shilaycow-setup` in a local session, and it does those two steps for you.
+**Most of the time: `/shilaycow-chief`.** Use it for anything that changes how your product behaves. It sharpens the request into scenarios with you, then plans, builds, verifies and reports on its own, calling the other skills as it needs them. Start it again with the same task to resume.
 
-## The 18 skills
+The rest are for when you want one practice on its own:
 
-| Phase | Skill | In one line |
+| You want to… | Use |
+|---|---|
+| Turn a vague idea into scenarios before anything is built | `/shilaycow-sharpen` |
+| Understand an area before touching it | `/shilaycow-how` |
+| Know why something is the way it is | `/shilaycow-why` |
+| Know where a task stands and what it is waiting on | `/shilaycow-status` |
+| Get a second, independent opinion on a pull request | `/shilaycow-verify` |
+| Check what a change to shared code could break | `/shilaycow-blast-radius` |
+| Stop a mistake that keeps coming back | `/shilaycow-correct` |
+
+## Skills
+
+| Phase | Skill | Use it when |
 |---|---|---|
-| Early | `shilaycow-sharpen` | say back what you want, then write it as a brief of scenarios you approve |
-| Early | `shilaycow-how` | explain how a part of the system works now |
-| Early | `shilaycow-why` | answer why something is the way it is, from the record |
-| Throughout | `shilaycow-spec` | keep `docs/spec/` true: what the whole system does now, by area |
-| Middle | `shilaycow-design` | derive the system's shape from the scenarios |
-| Middle | `shilaycow-plan` | cut the work into tickets, with dependencies and what can run in parallel |
-| Middle | `shilaycow-prove` | decide how each behaviour is proven; never by a test that cannot fail |
-| Late | `shilaycow-verify` | a session that built none of it runs six checks and posts PASS or FAIL |
-| Late | `shilaycow-try-it` | generate your project's own skill for starting and driving the app |
-| Late | `shilaycow-blast-radius` | find what a change could break elsewhere, and prove it by running code |
-| Late | `shilaycow-trail` | one row per decision made in place of asking |
-| Late | `shilaycow-report` | write it up for the person deciding whether to merge |
-| End of cycle | `shilaycow-retro` | record the pitfalls this task hit so the next one does not |
-| End of cycle | `shilaycow-correct` | when a mistake recurs, change the repository so it cannot happen again |
-| Composition | `shilaycow-chief` | Chief mode: a few fixed boundaries, everything else the agent's judgement |
-| Setup | `shilaycow-setup` | once per repository: the bot, the ruleset, the config |
-| Setup | `shilaycow-status` | read only: where a task stands, who it waits on, what is next |
-| Throughout | `shilaycow-principles` | seven judgements a good engineer applies; knowledge, not rules |
+| Early | [shilaycow-sharpen](plugin/skills/shilaycow-sharpen/SKILL.md) | a goal is vague, large or new: say it back, write a brief of scenarios you approve |
+| Early | [shilaycow-how](plugin/skills/shilaycow-how/SKILL.md) | you need to know how part of the system works now |
+| Early | [shilaycow-why](plugin/skills/shilaycow-why/SKILL.md) | you need to know why something is the way it is, from the record |
+| Throughout | [shilaycow-spec](plugin/skills/shilaycow-spec/SKILL.md) | `docs/spec/` should describe what the whole system does now |
+| Middle | [shilaycow-design](plugin/skills/shilaycow-design/SKILL.md) | a brief is approved and the system's shape should come from its scenarios |
+| Middle | [shilaycow-plan](plugin/skills/shilaycow-plan/SKILL.md) | the work should be cut into tickets and milestones |
+| Middle | [shilaycow-prove](plugin/skills/shilaycow-prove/SKILL.md) | you change behaviour and must prove it, never with a test that cannot fail |
+| Late | [shilaycow-verify](plugin/skills/shilaycow-verify/SKILL.md) | a pull request needs a PASS or FAIL from a session that built none of it |
+| Late | [shilaycow-try-it](plugin/skills/shilaycow-try-it/SKILL.md) | your project needs its own skill for starting and driving the app |
+| Late | [shilaycow-blast-radius](plugin/skills/shilaycow-blast-radius/SKILL.md) | a change to shared code could break something elsewhere |
+| Late | [shilaycow-trail](plugin/skills/shilaycow-trail/SKILL.md) | long or unattended work should log each decision made in place of asking |
+| Late | [shilaycow-report](plugin/skills/shilaycow-report/SKILL.md) | someone has to decide whether to merge |
+| End of cycle | [shilaycow-retro](plugin/skills/shilaycow-retro/SKILL.md) | a task is finishing and its pitfalls should not repeat |
+| End of cycle | [shilaycow-correct](plugin/skills/shilaycow-correct/SKILL.md) | the same class of mistake has happened twice |
+| Composition | [shilaycow-chief](plugin/skills/shilaycow-chief/SKILL.md) | you hand over a whole task |
+| Setup | [shilaycow-setup](plugin/skills/shilaycow-setup/SKILL.md) | a repository needs the bot, the ruleset and the config, or a check that they still hold |
+| Setup | [shilaycow-status](plugin/skills/shilaycow-status/SKILL.md) | you want to know where a task stands, without changing anything |
+| Throughout | [shilaycow-principles](plugin/skills/shilaycow-principles/SKILL.md) | writing or reviewing code: the judgements a good engineer applies |
 
-Each skill's full instructions are in `plugin/skills/<name>/SKILL.md`.
+## Limits
+
+- Not meant for projects with production environments, real users or real data.
+- The setup script copies and never deletes: if a later version removes or renames a skill, delete its old folder from `~/.claude/skills/` yourself.
 
 ## Credits
 

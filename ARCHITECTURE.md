@@ -34,37 +34,7 @@ Two kinds of rule follow from this, and every rule in the harness is one or the 
 
 ## 2. Three layers
 
-```mermaid
-%%{init: {"theme":"base","themeVariables":{"fontFamily":"Inter, Segoe UI, sans-serif","fontSize":"14px","lineColor":"#6B7280","primaryTextColor":"#111827","edgeLabelBackground":"#FFFFFF","clusterBkg":"transparent"},"flowchart":{"curve":"basis","nodeSpacing":40,"rankSpacing":45,"subGraphTitleMargin":{"top":6,"bottom":22}}}}%%
-flowchart TB
-    subgraph G["<b>Grown guards</b><br/><small>per project, merged by you</small>"]
-        direction LR
-        G1["<b>Pitfalls</b><br/><small>read by every builder</small>"] --> G2["<b>Types · lint · tests</b><br/><small>after a mistake happens twice</small>"] --> G3["<b>CI checks</b><br/><small>proposed, you apply</small>"]
-    end
-    subgraph M["<b>Method layer</b><br/><small>knowledge, the 18 skills</small>"]
-        direction LR
-        M1["<b>Early</b><br/><small>sharpen · how · why · spec</small>"] --> M2["<b>Middle</b><br/><small>design · plan · prove</small>"] --> M3["<b>Late</b><br/><small>verify · try-it · blast-radius<br/>trail · report</small>"] --> M4["<b>End of cycle</b><br/><small>retro · correct</small>"]
-    end
-    subgraph P["<b>Permission layer</b><br/><small>fixed, enforced by GitHub</small>"]
-        direction LR
-        P1["<b>Bot account</b><br/><small>Write role only</small>"] ~~~ P2["<b>Ruleset on main</b><br/><small>PR + 1 approval<br/>no force push · no deletion</small>"] ~~~ P3["<b>merge_unit</b><br/><small>Level 1 to 4</small>"]
-    end
-    G -->|"read by the next task"| M
-    M -->|"works inside"| P
-    M -.->|"retro and correct propose"| G
-    classDef you fill:#FFF4DB,stroke:#C98A00,stroke-width:1.5px,color:#3D2B00
-    classDef agent fill:#E6F0FF,stroke:#2F6FDB,stroke-width:1.5px,color:#0B2552
-    classDef gh fill:#E3F6E8,stroke:#2E8B57,stroke-width:1.5px,color:#0D3B22
-    classDef gate fill:#FFFFFF,stroke:#C98A00,stroke-width:2px,color:#3D2B00
-    classDef stop fill:#FDECEC,stroke:#C0392B,stroke-width:1.5px,color:#5A1410
-    classDef neutral fill:#F1F3F6,stroke:#8A94A6,stroke-width:1.5px,color:#1F2633
-    class P1,P2,P3 neutral
-    class M1,M2,M3,M4 agent
-    class G1,G2,G3 gh
-    style P fill:#F7F8FA,stroke:#B8C0CC,stroke-dasharray:4 3,color:#3A4352
-    style M fill:#F5F9FF,stroke:#9DBBF0,stroke-dasharray:4 3,color:#1D4A99
-    style G fill:#F4FBF6,stroke:#9AD1B0,stroke-dasharray:4 3,color:#1E6B41
-```
+<p align="center"><img src="assets/diagrams/01-three-layers.png" width="1047" alt="Three layers. Grown guards (pitfalls, then types, lint and tests, then CI checks), from retro and correct, are read by the next task. The method layer (early: sharpen, how, why, spec; middle: design, plan, prove; late: verify, try-it, blast-radius, trail, report; end of cycle: retro, correct) works inside the permission layer, which is fixed and enforced by GitHub: a bot account with the Write role only, a ruleset on main requiring a pull request and one approval with no force push or deletion, and merge_unit choosing Level 1 to 4."></p>
 
 - **The permission layer** is set up once per repository with `shilaycow-setup` and never changes between levels.
 - **The method layer** is the same at every level. At Level 1 you call the skills yourself; from Level 2 up, the Chief calls the same skills.
@@ -88,30 +58,7 @@ Every action with a large blast radius (irreversible, external, or costly) gets 
 
 **Deliberately not guarded:** files outside a ticket's scope, test configuration, commit authorship, destructive commands inside the container. All of these happen on a branch you can delete or in a container that is thrown away. If one of them keeps causing trouble in your project, it becomes that project's own guard (section 9).
 
-```mermaid
-%%{init: {"theme":"base","themeVariables":{"fontFamily":"Inter, Segoe UI, sans-serif","fontSize":"14px","lineColor":"#6B7280","primaryTextColor":"#111827","edgeLabelBackground":"#FFFFFF","clusterBkg":"transparent"},"flowchart":{"curve":"basis","nodeSpacing":40,"rankSpacing":45,"subGraphTitleMargin":{"top":6,"bottom":22}}}}%%
-flowchart LR
-    A["<b>Agent</b><br/><small>acts as the bot</small>"] -->|"push"| B["<b>task/ or work/ branch</b><br/><small>disposable</small>"]
-    B -->|"opens"| PR["<b>Pull request into main</b>"]
-    PR -->|"independent session"| V["<b>Verdict</b><br/><small>PASS or FAIL on one commit</small>"]
-    V --> O{{"<b>You</b> read, try, decide"}}
-    O ==>|"merge"| MAIN[("<b>main</b>")]
-    O -.->|"send back"| B
-    A -. "push to main<br/>refused by the ruleset" .-x MAIN
-    A -. "change settings<br/>refused, Write role only" .-x S["<b>Repository settings</b>"]
-
-    classDef you fill:#FFF4DB,stroke:#C98A00,stroke-width:1.5px,color:#3D2B00
-    classDef agent fill:#E6F0FF,stroke:#2F6FDB,stroke-width:1.5px,color:#0B2552
-    classDef gh fill:#E3F6E8,stroke:#2E8B57,stroke-width:1.5px,color:#0D3B22
-    classDef gate fill:#FFFFFF,stroke:#C98A00,stroke-width:2px,color:#3D2B00
-    classDef stop fill:#FDECEC,stroke:#C0392B,stroke-width:1.5px,color:#5A1410
-    classDef neutral fill:#F1F3F6,stroke:#8A94A6,stroke-width:1.5px,color:#1F2633
-    class A,B,V agent
-    class PR neutral
-    class O gate
-    class MAIN gh
-    class S stop
-```
+<p align="center"><img src="assets/diagrams/02-boundary.png" width="725" alt="The boundary. The agent, acting as the bot, pushes to a disposable task or work branch, which opens a pull request into main. An independent session posts a verdict, PASS or FAIL on one commit. You read, try and decide: merge into main, or send it back to the branch. The agent's own push to main is refused by the ruleset, and its attempt to change repository settings is refused because it has the Write role only."></p>
 
 The boundary holds without the agent reading a single word. That is why it is the only thing the harness insists on.
 
@@ -137,27 +84,7 @@ Levels 2 to 4 need the same GitHub setup; moving between them is one line in the
 
 What the branches look like at Level 4, with two tickets:
 
-```mermaid
-%%{init: {"theme":"base","themeVariables":{"fontFamily":"Inter, Segoe UI, sans-serif","git0":"#2E8B57","git1":"#2F6FDB","git2":"#7AA7F0","git3":"#7AA7F0","gitBranchLabel0":"#FFFFFF","gitBranchLabel1":"#FFFFFF","gitBranchLabel2":"#0B2552","gitBranchLabel3":"#0B2552","commitLabelBackground":"#FFFFFF","commitLabelColor":"#111827"},"gitGraph":{"mainBranchName":"main"}}}%%
-gitGraph
-    commit id: "main"
-    branch task/search
-    checkout task/search
-    commit id: "brief + design + plan"
-    branch work/search/T-01
-    checkout work/search/T-01
-    commit id: "T-01 built"
-    checkout task/search
-    merge work/search/T-01 id: "Chief merges T-01"
-    branch work/search/T-02
-    checkout work/search/T-02
-    commit id: "T-02 built"
-    checkout task/search
-    merge work/search/T-02 id: "Chief merges T-02"
-    commit id: "spec + final report"
-    checkout main
-    merge task/search id: "You merge the task" type: HIGHLIGHT
-```
+<p align="center"><img src="assets/diagrams/03-level-4-branches.png" width="670" alt="Branches at Level 4. From main, a task branch receives the brief, design and plan. Ticket T-01 is built on its own work branch and the Chief merges it into the task branch; the same for T-02. The task branch then gets the spec update and the final report, and you merge the task into main."></p>
 
 At Level 3 the same thing happens once per milestone; at Level 2 each `work/` branch opens its pull request straight into `main`, and there is no `task/` branch.
 
@@ -174,42 +101,7 @@ At Level 3 the same thing happens once per milestone; at Level 2 each `work/` br
 
 All roles act as the same bot account, so they are told apart by session: every `Ready.` and every verdict carries a `Session:` line, and the Chief rejects a `PASS` whose session matches the Chief's own or any builder's.
 
-```mermaid
-%%{init: {"theme":"base","themeVariables":{"fontFamily":"Inter, Segoe UI, sans-serif","actorBkg":"#FFFFFF","actorBorder":"#8A94A6","actorTextColor":"#111827","signalColor":"#4B5563","signalTextColor":"#111827","noteBkgColor":"#FFF4DB","noteBorderColor":"#C98A00","noteTextColor":"#3D2B00","labelBoxBkgColor":"#F1F3F6","labelBoxBorderColor":"#8A94A6","loopTextColor":"#1F2633"}}}%%
-sequenceDiagram
-    box rgb(255,244,219) You
-        actor Owner
-    end
-    box rgb(230,240,255) The agent, acting as the bot
-        participant Chief
-        participant Builder as Builder (per ticket)
-        participant Verifier as Verifier (new session)
-    end
-    box rgb(227,246,232) GitHub
-        participant GH as GitHub
-    end
-    Owner->>Chief: describe the task
-    Chief-->>Owner: says back what it understood
-    Chief->>GH: brief.md on the task branch
-    Owner->>Chief: approve and say "start"
-    Note over Owner,Chief: unattended from here
-    Chief->>GH: tracking issue "Task: slug"
-    loop each ticket, in parallel when areas do not overlap
-        Chief->>Builder: roles/builder.md + the ticket
-        Builder->>GH: work branch, pull request, "Ready."
-        opt care level is careful, or the Chief judges it worth it
-            Chief->>Verifier: roles/verifier.md + the pull request
-            Verifier->>GH: "Verification: PASS / FAIL"
-        end
-        Chief->>GH: merge the ticket into the task branch
-    end
-    Chief->>GH: spec update, final report, pull request into main
-    Chief->>Verifier: judge the head of that pull request
-    Verifier->>GH: verdict on the exact head commit
-    Chief->>GH: findings, "Retro:", "Finished:"
-    GH-->>Owner: a pull request ready to try and merge
-    Owner->>GH: merge, or send back
-```
+<p align="center"><img src="assets/diagrams/04-roles.png" width="930" alt="Roles over time. You describe the task; the Chief says back what it understood and writes brief.md on the task branch. You approve and say start. The Chief opens a tracking issue, then for each ticket gives a builder its role file and the ticket; the builder pushes a work branch, opens a pull request and posts Ready. When the care level is careful, or the Chief judges it worth it, a verifier judges that pull request. The Chief merges each ticket into the task branch, then updates the spec, writes the final report and opens the pull request into main, which a verifier judges on its exact head commit. The Chief posts findings, Retro and Finished, and you merge or send it back."></p>
 
 The builder never starts its own verifier: whoever is being judged does not write the judge's instructions.
 
@@ -224,58 +116,7 @@ A task has two halves with one explicit handover: **your "start"**.
 
 ### 6.1 The task as a state machine
 
-```mermaid
-%%{init: {"theme":"base","themeVariables":{"fontFamily":"Inter, Segoe UI, sans-serif","fontSize":"14px","lineColor":"#6B7280","primaryTextColor":"#111827","edgeLabelBackground":"#FFFFFF","clusterBkg":"transparent"},"flowchart":{"curve":"basis","nodeSpacing":40,"rankSpacing":45,"subGraphTitleMargin":{"top":6,"bottom":22}}}}%%
-flowchart TB
-    subgraph TALK["<b>① With you</b><br/><small>a conversation</small>"]
-        direction TB
-        S["<b>Sharpening</b><br/><small>says it back, writes the brief</small>"]
-        D["<b>Designing together</b><br/><small>optional</small>"]
-        G{{"You say <b>start</b>"}}
-        S -->|"you want to"| D
-        D -->|"a scenario changes"| S
-        S --> G
-        D --> G
-    end
-    subgraph ALONE["<b>② Unattended</b><br/><small>the agent, acting as the bot</small>"]
-        direction TB
-        P["<b>Planning</b><br/><small>cut into tickets</small>"]
-        B["<b>Building</b><br/><small>one builder per ticket</small>"]
-        F["<b>Finishing</b><br/><small>spec + final report</small>"]
-        J["<b>Judging</b><br/><small>a session that built none of it</small>"]
-        X["<b>Fixing</b><br/><small>at most fix_rounds</small>"]
-        P --> B
-        B -->|"next ticket"| B
-        B -.->|"plan was wrong"| P
-        B -->|"all tickets merged"| F
-        F -->|"pull request into main"| J
-        J -->|"FAIL"| X
-        X -->|"new head, new verdict"| J
-    end
-    subgraph YOURS["<b>③ Your call</b><br/><small>on GitHub</small>"]
-        direction TB
-        R["<b>Ready for you</b><br/><small>report + how to try it</small>"]
-        M(["<b>Merged</b>"])
-        R -->|"you merge"| M
-    end
-    G ==>|"approved"| P
-    J ==>|"PASS"| R
-    R -.->|"you send it back"| S
-
-    classDef you fill:#FFF4DB,stroke:#C98A00,stroke-width:1.5px,color:#3D2B00
-    classDef agent fill:#E6F0FF,stroke:#2F6FDB,stroke-width:1.5px,color:#0B2552
-    classDef gh fill:#E3F6E8,stroke:#2E8B57,stroke-width:1.5px,color:#0D3B22
-    classDef gate fill:#FFFFFF,stroke:#C98A00,stroke-width:2px,color:#3D2B00
-    classDef stop fill:#FDECEC,stroke:#C0392B,stroke-width:1.5px,color:#5A1410
-    classDef neutral fill:#F1F3F6,stroke:#8A94A6,stroke-width:1.5px,color:#1F2633
-    class S,D you
-    class G gate
-    class P,B,F,J,X agent
-    class R,M gh
-    style TALK fill:#FFFBF0,stroke:#E8C877,stroke-dasharray:4 3,color:#7A5300
-    style ALONE fill:#F5F9FF,stroke:#9DBBF0,stroke-dasharray:4 3,color:#1D4A99
-    style YOURS fill:#F4FBF6,stroke:#9AD1B0,stroke-dasharray:4 3,color:#1E6B41
-```
+<p align="center"><img src="assets/task-flow.webp" alt="How a task flows through shilaycow: with you, then unattended, then your call on GitHub. The same picture as at the top of the README."></p>
 
 Two exits apply from **any** unattended state, so they are not drawn as arrows:
 
@@ -296,29 +137,7 @@ Two exits apply from **any** unattended state, so they are not drawn as arrows:
 
 ### 6.2 A ticket as a state machine
 
-```mermaid
-%%{init: {"theme":"base","themeVariables":{"fontFamily":"Inter, Segoe UI, sans-serif","fontSize":"14px","lineColor":"#6B7280","primaryTextColor":"#111827","edgeLabelBackground":"#FFFFFF","clusterBkg":"transparent"},"flowchart":{"curve":"basis","nodeSpacing":40,"rankSpacing":45,"subGraphTitleMargin":{"top":6,"bottom":22}}}}%%
-flowchart LR
-    O["<b>Open</b><br/><small>written by plan</small>"] -->|"Chief dispatches"| IP["<b>In progress</b><br/><small>a builder on work/…</small>"]
-    IP -->|"contradiction, wrong test,<br/>secret or deploy needed"| BL["<b>Blocked</b><br/><small>comment says why</small>"]
-    BL -->|"Chief re-cuts or asks you"| O
-    IP -->|"suite passes · Status: done<br/>pull request + Ready."| RD["<b>Ready</b>"]
-    RD -->|"careful, or Chief asks"| JD{{"<b>Verified</b>"}}
-    JD -->|"FAIL<br/>fix round"| IP
-    JD -->|"PASS"| MG(["<b>Merged into<br/>the task branch</b>"])
-    RD -->|"no verdict needed"| MG
-
-    classDef you fill:#FFF4DB,stroke:#C98A00,stroke-width:1.5px,color:#3D2B00
-    classDef agent fill:#E6F0FF,stroke:#2F6FDB,stroke-width:1.5px,color:#0B2552
-    classDef gh fill:#E3F6E8,stroke:#2E8B57,stroke-width:1.5px,color:#0D3B22
-    classDef gate fill:#FFFFFF,stroke:#C98A00,stroke-width:2px,color:#3D2B00
-    classDef stop fill:#FDECEC,stroke:#C0392B,stroke-width:1.5px,color:#5A1410
-    classDef neutral fill:#F1F3F6,stroke:#8A94A6,stroke-width:1.5px,color:#1F2633
-    class O,IP,RD agent
-    class BL stop
-    class JD gate
-    class MG gh
-```
+<p align="center"><img src="assets/diagrams/06-ticket.png" width="620" alt="A ticket's life. Open, written by plan; the Chief dispatches a builder and it is in progress. It becomes blocked when the ticket contradicts the brief, a test looks wrong, or a secret or deploy is needed; the Chief re-cuts or asks you, and it is open again. When the suite passes, its status is done and the builder posts Ready on a pull request. If the care level is careful or the Chief asks, it is verified: FAIL sends it back for a fix round, PASS merges it into the task branch. Otherwise it is merged without its own verdict."></p>
 
 ### 6.3 The care level
 
@@ -334,23 +153,7 @@ The brief has one dial between speed and assurance. It sets the least the Chief 
 
 One pull request for a whole system would be too large to review. Large work becomes a chain of tasks, and **the first task's deliverable is the specification itself**:
 
-```mermaid
-%%{init: {"theme":"base","themeVariables":{"fontFamily":"Inter, Segoe UI, sans-serif","fontSize":"14px","lineColor":"#6B7280","primaryTextColor":"#111827","edgeLabelBackground":"#FFFFFF","clusterBkg":"transparent"},"flowchart":{"curve":"basis","nodeSpacing":40,"rankSpacing":45,"subGraphTitleMargin":{"top":6,"bottom":22}}}}%%
-flowchart LR
-    T0["<b>Task 0</b><br/><small>explore + spec<br/>documents only</small>"] --> T1["<b>Task 1</b><br/><small>first usable slice</small>"] --> T2["<b>Task 2</b><br/><small>next slice</small>"] --> TN["…"]
-    T0 -. "scenarios under Not yet built" .-> SPEC[("<b>docs/spec/</b>")]
-    T1 -. "moves its scenarios to Scenarios" .-> SPEC
-    T2 -. "moves its scenarios to Scenarios" .-> SPEC
-
-    classDef you fill:#FFF4DB,stroke:#C98A00,stroke-width:1.5px,color:#3D2B00
-    classDef agent fill:#E6F0FF,stroke:#2F6FDB,stroke-width:1.5px,color:#0B2552
-    classDef gh fill:#E3F6E8,stroke:#2E8B57,stroke-width:1.5px,color:#0D3B22
-    classDef gate fill:#FFFFFF,stroke:#C98A00,stroke-width:2px,color:#3D2B00
-    classDef stop fill:#FDECEC,stroke:#C0392B,stroke-width:1.5px,color:#5A1410
-    classDef neutral fill:#F1F3F6,stroke:#8A94A6,stroke-width:1.5px,color:#1F2633
-    class T0,T1,T2,TN agent
-    class SPEC gh
-```
+<p align="center"><img src="assets/diagrams/07-chain-of-tasks.png" width="611" alt="A large system as a chain of tasks. Task 0 explores and writes the spec, documents only, putting scenarios under Not yet built in docs/spec/. Task 1, the first usable slice, and Task 2, the next slice, each move their scenarios to Scenarios in docs/spec/."></p>
 
 Each task still merges once, and the spec lands in `main` independently: even if a later task is thrown away, the spec stays.
 
@@ -360,39 +163,7 @@ Each task still merges once, and the spec lands in `main` independently: even if
 
 `shilaycow-verify` runs in a session that built none of the work, on a clean checkout of one head commit. It treats the builder's claims as claims, not evidence.
 
-```mermaid
-%%{init: {"theme":"base","themeVariables":{"fontFamily":"Inter, Segoe UI, sans-serif","fontSize":"14px","lineColor":"#6B7280","primaryTextColor":"#111827","edgeLabelBackground":"#FFFFFF","clusterBkg":"transparent"},"flowchart":{"curve":"basis","nodeSpacing":40,"rankSpacing":45,"subGraphTitleMargin":{"top":6,"bottom":22}}}}%%
-flowchart TD
-    S["<b>Clean checkout</b><br/><small>of the head commit</small>"] --> C0{{"Did this session<br/>build any of it?"}}
-    C0 -->|"yes"| STOP["<b>Stop</b><br/><small>someone else verifies</small>"]
-    C0 -->|"no"| C1
-    subgraph CHECKS["<b>Six checks</b><br/><small>each with evidence</small>"]
-        direction TB
-        C1["<b>1 · Tests</b><br/><small>the full suite passes</small>"]
-        C2["<b>2 · Scenarios</b><br/><small>each shown by a test or a driven action;<br/>for main, docs/spec/ matches the work</small>"]
-        C3["<b>3 · The real thing</b><br/><small>follow how to try it with the try-app skill</small>"]
-        C4["<b>4 · Tests that can fail</b><br/><small>break each behaviour, the test must fail;<br/>expected values come from the scenario</small>"]
-        C5["<b>5 · What went unsaid</b><br/><small>unmentioned changes; extremes listed as unspecified</small>"]
-        C6["<b>6 · The code itself</b><br/><small>read as its maintainer, cite file and line<br/>(skipped at care level fast)</small>"]
-        C1 --> C2 --> C3 --> C4 --> C5 --> C6
-    end
-    C6 --> J{{"Any FAIL condition?"}}
-    J -->|"yes"| F["<b>Verification: FAIL</b><br/><small>which check · how to reproduce · what was seen</small>"]
-    J -->|"no"| P["<b>Verification: PASS</b><br/><small>plus Findings for everything else</small>"]
-
-    classDef you fill:#FFF4DB,stroke:#C98A00,stroke-width:1.5px,color:#3D2B00
-    classDef agent fill:#E6F0FF,stroke:#2F6FDB,stroke-width:1.5px,color:#0B2552
-    classDef gh fill:#E3F6E8,stroke:#2E8B57,stroke-width:1.5px,color:#0D3B22
-    classDef gate fill:#FFFFFF,stroke:#C98A00,stroke-width:2px,color:#3D2B00
-    classDef stop fill:#FDECEC,stroke:#C0392B,stroke-width:1.5px,color:#5A1410
-    classDef neutral fill:#F1F3F6,stroke:#8A94A6,stroke-width:1.5px,color:#1F2633
-    class S neutral
-    class C0,J gate
-    class STOP,F stop
-    class C1,C2,C3,C4,C5,C6 agent
-    class P gh
-    style CHECKS fill:#F5F9FF,stroke:#9DBBF0,stroke-dasharray:4 3,color:#1D4A99
-```
+<p align="center"><img src="assets/diagrams/08-verification.png" width="738" alt="How a verdict is reached. On a clean checkout of the head commit, a session that built any of the work stops: someone else verifies. Otherwise it runs six checks, each with evidence: tests, scenarios, the real thing, tests that can fail, what went unsaid, and the code itself (skipped at care level fast). Any FAIL condition gives Verification: FAIL with which check, how to reproduce and what was seen; otherwise Verification: PASS, with findings for everything else."></p>
 
 Rules that make the verdict trustworthy:
 
@@ -422,39 +193,7 @@ In every other situation the agent writes down its assumption (`shilaycow-trail`
 
 A new project starts with the server-side boundary and nothing else. Guards are added one rung at a time, only after a mistake has actually happened.
 
-```mermaid
-%%{init: {"theme":"base","themeVariables":{"fontFamily":"Inter, Segoe UI, sans-serif","fontSize":"14px","lineColor":"#6B7280","primaryTextColor":"#111827","edgeLabelBackground":"#FFFFFF","clusterBkg":"transparent"},"flowchart":{"curve":"basis","nodeSpacing":40,"rankSpacing":45,"subGraphTitleMargin":{"top":6,"bottom":22}}}}%%
-flowchart TD
-    E["<b>A task finishes</b>"] --> R["<b>shilaycow-retro</b><br/><small>FAIL verdicts, fix rounds,<br/>your corrections and comments after merging</small>"]
-    R --> PF[("<b>.shilaycow/pitfalls.md</b><br/><small>folded in by the next Chief,<br/>read by every builder</small>")]
-    PF --> Q{{"Same class of mistake<br/>happened twice?"}}
-    Q -->|"no"| NEXT["<b>Next task avoids it</b>"]
-    Q -->|"yes"| COR["<b>shilaycow-correct</b><br/><small>the highest rung that works</small>"]
-    subgraph LADDER["<b>The ladder</b><br/><small>highest rung first</small>"]
-        direction LR
-        L1["<b>1 · Architecture</b><br/><small>the wrong way no longer exists</small>"]
-        L2["<b>2 · Types</b><br/><small>the bad state cannot be written</small>"]
-        L3["<b>3 · Lint</b><br/><small>the error names the fix</small>"]
-        L4["<b>4 · Test</b>"]
-        L5["<b>5 · Docs</b><br/><small>last</small>"]
-        L1 ~~~ L2 ~~~ L3 ~~~ L4 ~~~ L5
-    end
-    COR --> LADDER
-    LADDER --> PRC["<b>A pull request you merge</b><br/><small>a CI change is a proposal you apply</small>"]
-    PRC --> DEL["<b>Pitfall removed</b><br/><small>once the guard catches every past instance</small>"]
-
-    classDef you fill:#FFF4DB,stroke:#C98A00,stroke-width:1.5px,color:#3D2B00
-    classDef agent fill:#E6F0FF,stroke:#2F6FDB,stroke-width:1.5px,color:#0B2552
-    classDef gh fill:#E3F6E8,stroke:#2E8B57,stroke-width:1.5px,color:#0D3B22
-    classDef gate fill:#FFFFFF,stroke:#C98A00,stroke-width:2px,color:#3D2B00
-    classDef stop fill:#FDECEC,stroke:#C0392B,stroke-width:1.5px,color:#5A1410
-    classDef neutral fill:#F1F3F6,stroke:#8A94A6,stroke-width:1.5px,color:#1F2633
-    class E neutral
-    class R,COR,NEXT,L1,L2,L3,L4,L5 agent
-    class PF,PRC,DEL gh
-    class Q gate
-    style LADDER fill:#F5F9FF,stroke:#9DBBF0,stroke-dasharray:4 3,color:#1D4A99
-```
+<p align="center"><img src="assets/diagrams/09-learning.png" width="1137" alt="How guards grow. When a task finishes, shilaycow-retro reads FAIL verdicts, fix rounds and your corrections, and the result is folded into .shilaycow/pitfalls.md, which every builder reads. If the same class of mistake has not happened twice, the next task avoids it. If it has, shilaycow-correct takes the highest rung that works: architecture, types, lint, test, and documentation last. The result is a pull request you merge, a CI change being a proposal you apply, and the pitfall is removed once the guard catches every past instance."></p>
 
 What you find wrong after merging is the most valuable input: it is what verification missed. One comment on the finished tracking issue is enough; the next task reads it first.
 
