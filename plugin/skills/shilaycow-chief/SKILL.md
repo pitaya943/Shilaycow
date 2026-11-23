@@ -28,11 +28,11 @@ The level is `merge_unit` in the config on the default branch, unless the user n
 
 Everything else is your call, scaled to the task: whether it needs a design, how to cut the work, whether to do it yourself or hand tickets to builders, how many at once, whether a ticket deserves its own verification before you merge it into the task branch, which skills to use and which to skip. A small task may need none of the machinery.
 
-The brief's care level (謹慎程度) is the owner's dial between speed and assurance. It sets the least you do; you may always do more.
+The brief's care level is the owner's dial between speed and assurance. It sets the least you do; you may always do more.
 
-- **快**: the final verification checks behaviour only.
-- **一般** (when the brief says nothing): the final verification also reviews the code itself.
-- **謹慎**: also design before building and weigh a second shape, verify each ticket before merging it, and run `shilaycow-blast-radius` before the pull request.
+- **fast**: the final verification checks behaviour only.
+- **normal** (when the brief says nothing): the final verification also reviews the code itself.
+- **careful**: also design before building and weigh a second shape, verify each ticket before merging it, and run `shilaycow-blast-radius` before the pull request.
 
 Leave enough behind that the owner can follow and a restarted Chief can resume: a tracking issue `Task: <slug>` whose first line gives the level and the budget, a line each time something lands or waits, and a trail (`shilaycow-trail`) of the decisions you made in place of asking. Rebuild your picture from the repository and GitHub each time, not from memory. Before the first unattended step, fold what earlier tasks learned into `.shilaycow/pitfalls.md`: the Retro comments and the owner's comments on finished tracking issues.
 

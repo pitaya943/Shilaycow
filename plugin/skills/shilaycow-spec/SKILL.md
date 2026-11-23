@@ -18,23 +18,23 @@ Keep one description of what the system does now, so that nobody has to rebuild 
 An area is a part of the system as its users would name it (accounts, billing, search), never a layer (API, database, front end). `docs/spec/<area>.md` holds:
 
 - one sentence on what the area is for;
-- **情境**: every scenario that holds now, as Given / When / Then in the user's words, each under a heading that names what the user does. Not a number: every task's brief numbers from one again;
-- **規則**: the limits and defaults that were decided (lengths, counts, empty and repeated input, several people at once, how long data is kept), each with the task that decided it;
+- **Scenarios**: every scenario that holds now, as Given / When / Then in the user's words, each under a heading that names what the user does. Not a number: every task's brief numbers from one again;
+- **Rules**: the limits and defaults that were decided (lengths, counts, empty and repeated input, several people at once, how long data is kept), each with the task that decided it;
 - the tasks that last changed the area;
-- **尚未建置**, only while a larger plan is agreed and not finished: scenarios the owner approved that are not built yet. The task that builds one moves it up to 情境.
+- **Not yet built**, only while a larger plan is agreed and not finished: scenarios the owner approved that are not built yet. The task that builds one moves it up to Scenarios.
 
 And when a task has been folded in:
 
 - every scenario it added is there, and every scenario it changed reads as the system now behaves, with the old wording gone;
 - scenarios it removed are gone;
-- the brief's assumptions that were built are under 規則;
+- the brief's assumptions that were built are under Rules;
 - nothing left in the spec is made false by the work.
 
 The spec changes in the same pull request as the code, so the two are judged and merged together.
 
 ## How
 
-Write in the present tense. 情境 holds only what is true now; the one place for what is agreed but not built is 尚未建置. The spec has no history: that is in `docs/tasks/` and the trail. Fold by area, not by task: a section per task turns the spec back into a history.
+Write in the present tense, with these headings in English. Scenarios holds only what is true now; the one place for what is agreed but not built is Not yet built. A spec from an earlier version may use 情境, 規則 and 尚未建置: read them as Scenarios, Rules and Not yet built, and rename them in the area you are folding into. The spec has no history: that is in `docs/tasks/` and the trail. Fold by area, not by task: a section per task turns the spec back into a history.
 
 Let the tree grow only when it has to. A small system is one area file. When an area grows past what a reader can hold at once (about 150 lines is a fair sign), make it a folder, `<area>/index.md` with a file for each part, and keep the links in the index working.
 

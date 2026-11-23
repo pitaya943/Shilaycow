@@ -17,13 +17,13 @@ Before any question, you said back in your own words what the user wants: the go
 
 Then `docs/tasks/<slug>/brief.md` exists with these headings filled in:
 
-- **目標**: what will be true for the user.
-- **不做什麼**: what is deliberately left out. Never empty.
-- **情境**: scenarios `S-1`, `S-2`, ... as Given / When / Then, in the user's own vocabulary, with no class, table or file names. When the project has a spec, say for each scenario which area it belongs to and whether it is new, changes one that is there, or removes one.
-- **怎麼試**: how a person would try the result by hand.
-- **預算**: hours and sessions.
-- **謹慎程度**: 快, 一般 or 謹慎. How much checking this task is worth; the user's call, 一般 unless they say otherwise.
-- **假設**: what the scenarios leave open that a user will still run into, each with the default you chose. Think of limits (how long, how large, how many), empty and repeated input, several people at once, how long data is kept. Do not ask about each; decide, and lay the decisions out where the user will see them when approving.
+- **Goal**: what will be true for the user.
+- **Out of scope**: what is deliberately left out. Never empty.
+- **Scenarios**: scenarios `S-1`, `S-2`, ... as Given / When / Then, in the user's own vocabulary, with no class, table or file names. When the project has a spec, say for each scenario which area it belongs to and whether it is new, changes one that is there, or removes one.
+- **How to try it**: how a person would try the result by hand.
+- **Budget**: hours and sessions.
+- **Care level**: fast, normal or careful. How much checking this task is worth; the user's call, normal unless they say otherwise.
+- **Assumptions**: what the scenarios leave open that a user will still run into, each with the default you chose. Think of limits (how long, how large, how many), empty and repeated input, several people at once, how long data is kept. Do not ask about each; decide, and lay the decisions out where the user will see them when approving.
 
 And for every scenario you can name either a test that would fail today or a manual step that would show it.
 
@@ -33,7 +33,7 @@ And for every scenario you can name either a test that would fail today or a man
 - Write a first draft of the brief from what you already know, then ask about the gaps. Keep the file current as answers arrive.
 - Ask the user about outcomes only: how they will use it, what counts as failure, what they would be upset to find missing. Offering your recommended answer with each question lets them accept in a word.
 - Answer technical questions yourself by reading the repository (`shilaycow-how`, `shilaycow-why`). Do not ask the user what the code can tell you.
-- Write the brief in the language set by `report_language`, Traditional Chinese by default.
+- Write the brief in the language set by `report_language`, English by default, keeping the headings in English. A brief from an earlier version may carry Chinese headings (目標, 情境, 謹慎程度 with 快 / 一般 / 謹慎); read them as their English counterparts, and switch them to English when you next rewrite the file.
 
 ## Stop when
 

@@ -1,87 +1,91 @@
 # shilaycow
 
-給 Claude Code(桌面 app 加雲端 session)用的開發 harness:
+A development harness for Claude Code (the desktop app and cloud sessions):
 
-- 一組**可以單獨使用的 skill**,每個對應開發流程中的一個做法。
-- 一個把它們組合起來的 **Chief 模式**(`shilaycow-chief`),讓 agent 把一個任務從需求做到一個可以合併的 PR。
-- 一條放在 **GitHub 伺服器端的邊界**:無論 agent 做了什麼,`main` 只有 Owner 能改。
+- **18 skills you can use on their own**, one for each practice in the development cycle.
+- **Chief mode** (`shilaycow-chief`), which composes them so an agent can take a task from a request to a pull request you can merge.
+- **A boundary on GitHub's servers**: whatever the agent does, only you can change `main`.
 
-想法是:盡可能放寬對 agent 的限制,harness 只負責在 agent 失誤時保護 repo。品質靠檢查結果(獨立驗收、讀程式碼、把行為改壞看測試會不會失敗),不靠規定過程。
+The idea: loosen the reins on the agent as far as possible, and let the harness protect the repository only where a mistake would cost you. Quality comes from checking results (independent verification, reading the code, breaking a behaviour to see its test fail), not from prescribing a process.
 
-不適用於有正式環境、真實使用者或真實資料的專案。
+**How it works, with diagrams:** [ARCHITECTURE.md](ARCHITECTURE.md).
 
-## 怎麼裝
+Not meant for projects with production environments, real users or real data.
 
-Skill 不需要放進你的專案。它們裝在 Claude 讀取使用者層級 skill 的位置(`~/.claude/skills/`),用同一段指令:
+<p align="center">
+  <img src="assets/task-flow.webp" width="480" alt="How a task flows through shilaycow: with you (sharpening, designing together, you say start), then unattended (planning, building, finishing, judging, fixing on FAIL), then your call on GitHub (ready for you, you merge, merged). Underneath: the bot has Write only and a ruleset protects main, so only you can merge.">
+</p>
+
+## Install
+
+The skills do not go into your project. They are installed where Claude Code reads user-level skills (`~/.claude/skills/`), always with the same command:
 
 ```bash
 git clone -q --depth 1 https://github.com/pitaya943/shilaycow.git /tmp/shilaycow-src && mkdir -p ~/.claude/skills && cp -r /tmp/shilaycow-src/plugin/skills/. ~/.claude/skills/
 ```
 
-### 雲端 session(主要的用法)
+### Cloud sessions (the main way to use it)
 
-1. 在 Claude Code 建立一個雲端環境,把 [`plugin/skills/shilaycow-setup/install-skills.sh`](plugin/skills/shilaycow-setup/install-skills.sh) 的內容貼進它的 **Setup script**。網路要能連到 `github.com`。
-2. 之後這個專案的 session 都在這個環境裡開。每個新的 session 一啟動就有全部的 skill;它再開出去的 session(builder、verifier)預設用同一個環境,所以也有。專案自己的 `.claude/skills/`(例如 `try-<app>`)同時照常載入。
+1. Create a cloud environment in Claude Code and paste the contents of [`plugin/skills/shilaycow-setup/install-skills.sh`](plugin/skills/shilaycow-setup/install-skills.sh) into its **Setup script**. Its network must reach `github.com`.
+2. Start this project's sessions in that environment. Every new session has all the skills from the start; the sessions it starts (builders, verifiers) use the same environment by default, so they have them too. Your project's own `.claude/skills/` (such as `try-<app>`) loads alongside them as usual.
 
-每次開 session 拿到的是當時最新的版本。想固定版本,在 script 的 `git clone` 加上 `--branch <tag>`,例如 `--branch v0.3.0`;所有版本列在這個 repo 的 tag。
+Each session gets the latest version. To stay on one version, add `--branch <tag>` to the script's `git clone`, for example `--branch v0.3.1`. Every version is a tag of this repository.
 
-### 自己的電腦
+### Your own computer
 
-只在你想在本機的 session 使用這些 skill 時才需要:在終端機執行上面那段指令一次,要更新時再執行一次。每個 skill 的名稱都以 `shilaycow-` 開頭,所以不會覆蓋你原有的個人 skill。這段指令只複製、不刪除:新版本拿掉或改名的 skill,舊的資料夾要自己刪掉。
+Only needed if you want the skills in local sessions: run the command above once in a terminal, and again to update. Every skill name starts with `shilaycow-`, so none of your own personal skills is overwritten. The command copies and never deletes: if a later version removes or renames a skill, delete the old folder yourself.
 
-### 不能用的做法
+### What does not work
 
-在專案的 `.claude/settings.json` 宣告 plugin marketplace(`extraKnownMarketplaces`、`enabledPlugins`):雲端 session 不會載入,也不會顯示任何錯誤。這是 Claude Code 文件明載的行為。
+- **Declaring a plugin marketplace in your project's `.claude/settings.json`** (`extraKnownMarketplaces`, `enabledPlugins`): cloud sessions do not load it, and show no error. Claude Code's documentation says so.
+- **`/plugin install` on your own computer:** only local sessions get it; the cloud container does not have it. Beware that the desktop app's menu still shows it in cloud sessions (with a colon, such as `shilaycow:chief`), but choosing it finds nothing. What works in the cloud is the set the setup script installs, named with a hyphen (`shilaycow-chief`). If you installed both, removing the local plugin avoids picking the wrong one.
+- **Copying `plugin/skills/` into your project's `.claude/skills/` and committing it** works, but every project gets its own copy that you must update by hand. Not recommended.
 
-在自己的電腦用 `/plugin install` 安裝:只有本機的 session 能用,雲端的容器裡沒有。要小心的是,桌面 app 的選單仍然會在雲端 session 裡顯示它(名稱帶冒號,例如 `shilaycow:chief`),但選了會找不到。雲端裡真正能用的是 setup script 裝的那一套,名稱是連字號的(`shilaycow-chief`)。兩種都裝過的話,把本機的 plugin 移除比較不會選錯。
+## Start a project
 
-另一個可行但不建議的做法是把 `plugin/skills/` 複製進專案的 `.claude/skills/` 並 commit:能用,但每個專案各有一份複本,更新後要手動同步。
+**A few skills on their own (Level 1).** Once installed, call them directly, for example `shilaycow-sharpen`, `shilaycow-how`, `shilaycow-why`, `shilaycow-prove`, `shilaycow-principles`. Nothing else to set up.
 
-## 開始一個專案
+**Let the agent do whole tasks (Levels 2 to 4).** Everything can be done in a browser and the Claude Code desktop app; no terminal needed.
 
-**只用幾個 skill(Level 1):** 裝好之後直接叫用,例如 `shilaycow-sharpen`、`shilaycow-how`、`shilaycow-why`、`shilaycow-prove`、`shilaycow-principles`。不需要其他設定。
+1. Create a GitHub account for a bot. Connect GitHub on claude.ai to that account, and install the Claude GitHub App on your repository. From then on sessions work as the bot; do not switch the connection in the middle of a session.
+2. In the environment with the skills installed, start a session on your repository and call `shilaycow-setup`. It walks you through the two things only you can do on github.com (invite the bot as a collaborator with the Write role; import the ruleset that protects `main`), and does the rest itself: writes the config, opens a setup pull request, and checks that the rules are in force.
+3. Merge that setup pull request.
+4. Start a session, call `shilaycow-chief` and describe the task. It says back what it understood and writes a brief; only after you approve and say start does the unattended part begin.
+5. Read the final pull request, try it with its "how to try it" steps, and merge. If you find something wrong after merging, leave one comment on the task's tracking issue: that is how the next task learns what verification missed.
 
-**讓 agent 自己完成整個任務(Level 2 到 4):** 全部可以在瀏覽器與 Claude Code 桌面 app 裡做完,不需要終端機。
+Those two steps must be done by you, because the agent's account must not be able to change repository settings: that is the very boundary protecting `main`.
 
-1. 準備一個 bot 的 GitHub 帳號,把 claude.ai 的 GitHub 連線接到它,並在你的 repo 安裝 Claude GitHub App。之後的 session 都以 bot 的身分工作;不要在 session 進行中切換連線。
-2. 在裝好 skill 的雲端環境,對你的 repo 開一個 session,叫用 `shilaycow-setup`。它會帶你在 GitHub 網頁做兩件只有你能做的事(邀請 bot 為 Write 的 collaborator、匯入保護 `main` 的 ruleset),其餘由它完成:寫設定檔、開一個設定的 PR、檢查規則是否生效。
-3. 合併那個設定的 PR。
-4. 開一個 session 叫用 `shilaycow-chief`,說明任務。它會先複述並寫任務簡述;你核准並說開始之後,它才進入無人值守的部分。
-5. 讀最終的 PR、照「怎麼試」試用、合併。合併後發現不對的地方,在追蹤 issue 留一則留言。
+If your computer has `gh` signed in as you, you can also call `shilaycow-setup` in a local session, and it does those two steps for you.
 
-那兩件事一定要你親手做,因為 agent 的帳號不能有改 repo 設定的權限:這正是保護 `main` 的那條邊界。
+## The 18 skills
 
-如果你的電腦有 `gh` 而且用你自己的帳號登入,也可以在本機的 session 叫用 `shilaycow-setup`,它會把那兩件事一起做完。
-
-## 十八個 skill
-
-| 階段 | Skill | 一句話 |
+| Phase | Skill | In one line |
 |---|---|---|
-| 前期 | `shilaycow-sharpen` | 先複述,再把目標寫成 Owner 核准的任務簡述 |
-| 前期 | `shilaycow-how` | 說明某個部分現在怎麼運作 |
-| 前期 | `shilaycow-why` | 從紀錄回答為什麼是現在這樣 |
-| 全程 | `shilaycow-spec` | 維持 `docs/spec/`:依領域描述整個系統現在的行為 |
-| 中期 | `shilaycow-design` | 從情境倒推出系統的形狀 |
-| 中期 | `shilaycow-plan` | 切成 ticket,標出依賴與可以平行的 |
-| 中期 | `shilaycow-prove` | 決定每個行為怎麼被證明;沒有不會失敗的測試 |
-| 後期 | `shilaycow-verify` | 沒參與建置的 session 做六項檢查,判 PASS 或 FAIL |
-| 後期 | `shilaycow-try-it` | 為專案產生「怎麼啟動並操作成品」的專屬 skill |
-| 後期 | `shilaycow-blast-radius` | 找出變更在別處會弄壞什麼,並實際執行來證明 |
-| 後期 | `shilaycow-trail` | 每個決定留一列 |
-| 後期 | `shilaycow-report` | 寫給決定要不要合併的人看的報告 |
-| 循環結尾 | `shilaycow-retro` | 找出這次踩到、而且會再踩的坑 |
-| 循環結尾 | `shilaycow-correct` | 同一類錯誤發生兩次時,改 repo 讓它做不出來 |
-| 組合 | `shilaycow-chief` | Chief 模式:六條邊界,其餘由 agent 判斷 |
-| 設定 | `shilaycow-setup` | 每個 repo 做一次:bot、ruleset、設定檔 |
-| 設定 | `shilaycow-status` | 唯讀:任務在哪、在等誰、下一步 |
-| 全程 | `shilaycow-principles` | 七條判斷標準;是知識,不是規定 |
+| Early | `shilaycow-sharpen` | say back what you want, then write it as a brief of scenarios you approve |
+| Early | `shilaycow-how` | explain how a part of the system works now |
+| Early | `shilaycow-why` | answer why something is the way it is, from the record |
+| Throughout | `shilaycow-spec` | keep `docs/spec/` true: what the whole system does now, by area |
+| Middle | `shilaycow-design` | derive the system's shape from the scenarios |
+| Middle | `shilaycow-plan` | cut the work into tickets, with dependencies and what can run in parallel |
+| Middle | `shilaycow-prove` | decide how each behaviour is proven; never by a test that cannot fail |
+| Late | `shilaycow-verify` | a session that built none of it runs six checks and posts PASS or FAIL |
+| Late | `shilaycow-try-it` | generate your project's own skill for starting and driving the app |
+| Late | `shilaycow-blast-radius` | find what a change could break elsewhere, and prove it by running code |
+| Late | `shilaycow-trail` | one row per decision made in place of asking |
+| Late | `shilaycow-report` | write it up for the person deciding whether to merge |
+| End of cycle | `shilaycow-retro` | record the pitfalls this task hit so the next one does not |
+| End of cycle | `shilaycow-correct` | when a mistake recurs, change the repository so it cannot happen again |
+| Composition | `shilaycow-chief` | Chief mode: a few fixed boundaries, everything else the agent's judgement |
+| Setup | `shilaycow-setup` | once per repository: the bot, the ruleset, the config |
+| Setup | `shilaycow-status` | read only: where a task stands, who it waits on, what is next |
+| Throughout | `shilaycow-principles` | seven judgements a good engineer applies; knowledge, not rules |
 
-每個 skill 的完整說明在 `plugin/skills/<name>/SKILL.md`。
+Each skill's full instructions are in `plugin/skills/<name>/SKILL.md`.
 
-## 想法的來源
+## Credits
 
-所有內容都是重新寫的,沒有複製其他專案的文字。部分想法來自 [pstack](https://github.com/cursor/plugins/tree/main/pstack)(MIT)與 [Matt Pocock 的 skills](https://github.com/mattpocock/skills)(MIT)。
+Everything here is written from scratch; no text is copied from other projects. Some ideas come from [pstack](https://github.com/cursor/plugins/tree/main/pstack) (MIT) and [Matt Pocock's skills](https://github.com/mattpocock/skills) (MIT).
 
-## 授權
+## License
 
-MIT,見 [LICENSE](LICENSE)。
+MIT, see [LICENSE](LICENSE).

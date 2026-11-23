@@ -35,4 +35,4 @@ Anything that points back to no scenario is probably extra. Sketching a second, 
 
 ## Outputs
 
-`docs/tasks/<slug>/design.md`, in the language set by `report_language`. If implementation later proves it wrong, change it and add a row to the trail (`shilaycow-trail`); never change the scenarios to match. When the task's deliverable is the specification of a system not yet built, the approved scenarios go into `docs/spec/` under 尚未建置 as `shilaycow-spec` describes, and the design stays here.
+`docs/tasks/<slug>/design.md`, in the language set by `report_language`. If implementation later proves it wrong, change it and add a row to the trail (`shilaycow-trail`); never change the scenarios to match. When the task's deliverable is the specification of a system not yet built, the approved scenarios go into `docs/spec/` under Not yet built as `shilaycow-spec` describes, and the design stays here.

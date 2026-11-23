@@ -16,11 +16,11 @@ The pull request or task branch, its ticket, the scenarios in `docs/tasks/<slug>
 You have checked, on a clean checkout of the head commit, and recorded evidence for each:
 
 1. **Tests**: the full suite passes.
-2. **Scenarios**: each scenario the work serves is shown by a test or by a driven action. For a pull request into `main`, `docs/spec/` also says what the work now makes true: every scenario it adds or changes is under 情境 as built, and nothing under 情境 is made false.
+2. **Scenarios**: each scenario the work serves is shown by a test or by a driven action. For a pull request into `main`, `docs/spec/` also says what the work now makes true: every scenario it adds or changes is under Scenarios (情境 in a spec from an earlier version) as built, and nothing under it is made false.
 3. **The real thing**: you followed the "how to try it" steps with `try-<app>` and they work as written.
 4. **Tests that can fail**: for each scenario shown by a test, you broke the behaviour in a throwaway copy and the test failed; and its expected values come from the scenario, not from the code under test.
 5. **What went unsaid**: anything the diff changes that neither the description nor the trail mentions. And what the brief never settled: try the extremes a user could reach (very long, very many, empty, repeated, two at once) and list what happens as `unspecified`, for the owner to decide. These are not defects.
-6. **The code itself**: read it as the person who will maintain it, against `shilaycow-principles`. Is there work no scenario asked for, a smaller change that would have done, a leftover of an abandoned attempt, state with two owners? Go through the diff file by file, and cite a file and line for every conclusion, the favourable ones too: a judgement with nothing cited was not made. Skip this check when the brief's care level is 快.
+6. **The code itself**: read it as the person who will maintain it, against `shilaycow-principles`. Is there work no scenario asked for, a smaller change that would have done, a leftover of an abandoned attempt, state with two owners? Go through the diff file by file, and cite a file and line for every conclusion, the favourable ones too: a judgement with nothing cited was not made. Skip this check when the brief's care level is fast (快 in a brief from an earlier version).
 
 For a whole task branch, also run `shilaycow-blast-radius` against `main`.
 

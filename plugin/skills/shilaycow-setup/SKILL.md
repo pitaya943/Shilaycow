@@ -24,7 +24,7 @@ All of these hold, and you have shown the owner what you checked:
 
 1. The bot account is a collaborator with the Write role, not Admin.
 2. A ruleset on the default branch requires a pull request with one approval, dismisses stale approvals on push, and blocks force pushes and deletion. The only bypass is the repository admin role, for pull requests only: the owner can merge their own pull request without a second approver, and nobody can push to the branch directly. `ruleset.json` beside this file is that ruleset.
-3. `.shilaycow/config.yml` exists with `owner`, `bot`, `merge_unit`, `test_command`, `budget`, `parallel_builders`, `fix_rounds`, `report_language`.
+3. `.shilaycow/config.yml` exists with `owner`, `bot`, `merge_unit`, `test_command`, `budget`, `parallel_builders`, `fix_rounds`, `report_language` (`en` unless the owner names another language).
 4. `AGENTS.md` has a section pointing at `.shilaycow/`, naming the branch classes (`task/`, `work/`, `spike/`) and saying only the owner merges `main`.
 5. Items 3 and 4 are on a branch with a pull request open, not pushed to `main`.
 6. The owner has a cloud environment whose setup script is `install-skills.sh` beside this file, and knows to start this project's sessions in it. A repository's own plugin settings are not loaded in cloud sessions.
