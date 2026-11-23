@@ -1,0 +1,13 @@
+{
+  "name": "shilaycow",
+  "owner": {
+    "name": "shilaycow contributors"
+  },
+  "plugins": [
+    {
+      "name": "shilaycow",
+      "source": "./plugin",
+      "description": "Standalone skills for each phase of development, a Chief mode that composes them, and one server-side boundary that keeps agents out of main."
+    }
+  ]
+}
