@@ -24,22 +24,22 @@ All of these hold, and you have shown the owner what you checked:
 
 1. The bot account is a collaborator with the Write role, not Admin.
 2. A ruleset on the default branch requires a pull request with one approval, dismisses stale approvals on push, and blocks force pushes and deletion. The only bypass is the repository admin role, for pull requests only: the owner can merge their own pull request without a second approver, and nobody can push to the branch directly. `ruleset.json` beside this file is that ruleset.
-3. `.shilaycow/config.yml` exists with `owner`, `bot`, `mode: auto`, `test_command`, `parallel_builders`, `fix_rounds`, `report_language` (`en` unless the owner names another language).
-4. `AGENTS.md` has a section pointing at `.shilaycow/`, naming the branch classes (`task/`, `work/`, `spike/`) and saying only the owner merges `main`; `.gitignore` ignores `.shilaycow/worktrees/`, where builders work.
-5. Items 3 and 4 are on a branch with a pull request open, not pushed to `main`; the labels `needs-owner` and `later` exist on the repository (the bot's Write role can create them).
-6. The owner has a cloud environment whose setup script is `install-skills.sh` beside this file, and knows to start this project's sessions in it. A repository's own plugin settings are not loaded in cloud sessions.
-7. The autopilot gate can reach the GitHub API as the bot: a token of the bot is saved for `api.github.com` (step 3 of `by-hand.md`), and `gate.py --github-only`, the script beside `shilaycow-autopilot`'s `SKILL.md`, run from the repository root, shows `PASS` for identity, role and ruleset.
+3. The repository setting **Automatically delete head branches** is on, so a branch goes once its pull request is merged. Where your GitHub tools do not show the setting, the owner confirms it.
+4. `.shilaycow/config.yml` exists with `owner`, `bot`, `mode: auto`, `test_command`, `parallel_builders`, `fix_rounds`.
+5. `AGENTS.md` has a section pointing at `.shilaycow/`, naming the branch classes (`task/`, `work/`, `spike/`) and saying only the owner merges `main`; `.gitignore` ignores `.shilaycow/worktrees/`, where builders work.
+6. Items 4 and 5 are on a branch with a pull request open, not pushed to `main`; the labels `needs-owner` and `later` exist on the repository (the bot's Write role can create them).
+7. The owner has a cloud environment whose setup script is `install-skills.sh` beside this file, and knows to start this project's sessions in it. A repository's own plugin settings are not loaded in cloud sessions.
 
 ## How
 
-**As the bot.** Walk the owner through items 1, 2 and 7 one step at a time, from `by-hand.md` beside this file, and wait for them to say each is done. Meanwhile write items 3 and 4 and open the pull request. Then check, and say for each item whether you confirmed it or the owner must look:
+**As the bot.** Walk the owner through items 1 to 3 one step at a time, from `by-hand.md` beside this file, and wait for them to say each is done. Meanwhile write items 4 and 5 and open the pull request. Then check, and say for each item whether you confirmed it or the owner must look:
 
 - who you are, and that you can push a branch but hold no admin role;
 - the rules in force on the default branch. They can be read without admin rights (`GET /repos/<owner>/<repo>/rules/branches/<branch>`); compare them with `ruleset.json`. If you cannot reach that from here, say so and ask the owner to read the ruleset page to you.
 
 Never test the boundary by trying to push to `main`.
 
-**As the owner.** Do items 1 and 2 with `gh api`, sending `ruleset.json` as the body, then items 3 to 5. The owner still does what only a person can: accepting the invitation as the bot, and connecting GitHub on claude.ai to the bot account with the Claude GitHub App installed on this repository.
+**As the owner.** Do items 1 to 3 with `gh api`, sending `ruleset.json` as the body, then items 4 to 6. The owner still does what only a person can: accepting the invitation as the bot, and connecting GitHub on claude.ai to the bot account with the Claude GitHub App installed on this repository.
 
 Either way: say why at each step, and never overwrite a file that exists; add a section or report the difference. If the project has a test command, propose a workflow that runs it as a required check; the owner adds it, since it lives under `.github/`.
 

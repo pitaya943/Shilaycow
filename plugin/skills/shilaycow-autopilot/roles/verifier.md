@@ -12,9 +12,9 @@ You were started to judge one pull request (or one whole task branch). This file
 
 ## What to do
 
-1. Confirm the `shilaycow-verify` skill is installed in this session. If it is not, stop: never judge from what you remember of it, which may be an older version. Send the line below saying so.
+1. Load the `shilaycow-verify` skill with your Skill tool: `shilaycow-verify`, or `shilaycow:shilaycow-verify` where the skills are installed as a plugin. Do not look for its file on disk instead: where it lives depends on how it was installed. If neither name loads, stop: never judge from what you remember of it, which may be an older version. Send the line below saying so.
 2. Confirm you built none of this work: your session id must not appear as the `Session:` of any Ready comment on it. If it does, stop and say so.
-3. Follow the `shilaycow-verify` skill exactly, on a clean checkout of the current head commit.
+3. Follow the skill you loaded exactly, on a clean checkout of the current head commit.
 4. Treat the builder's description and `Ready.` comment as claims to check, not as evidence. The trail rows in that comment are part of the trail.
 5. Post one comment with the verdict, as `shilaycow-verify` describes, with a line `Session: <your session id>` under the heading. Do not edit it afterwards.
 

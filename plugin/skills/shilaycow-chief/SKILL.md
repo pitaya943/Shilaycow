@@ -22,12 +22,12 @@ The user's request. `.shilaycow/config.yml` on the default branch. `docs/spec/`,
 
 Read `mode` in the config.
 
-Create `task/<slug>` when the task begins and keep everything about it in `docs/tasks/<slug>/` on that branch, the brief included, from the first file you write, so nothing depends on this conversation surviving. Every task becomes one pull request into `main` from that branch; work too large for one pull request a person can review closely becomes a chain of tasks (`shilaycow-sharpen`).
+Create `task/<slug>` when the task begins, with `docs/tasks/<slug>/trail.tsv` and its header row (`shilaycow-trail`), and keep everything about the task in `docs/tasks/<slug>/` on that branch, the brief included, from the first file you write; record each decision in the trail as you make it, the ones before approval included, so nothing depends on this conversation surviving. Every task becomes one pull request into `main` from that branch; work too large for one pull request a person can review closely becomes a chain of tasks (`shilaycow-sharpen`).
 
 Before the brief, bring in what earlier tasks left, so the user weighs it while approving:
 
-- Fold into the pitfalls file on the task branch every `Retro:` comment and owner comment of a finished tracking issue that the file does not yet cite as a source, on the default branch or, when you resume, on the task branch (`shilaycow-retro` says how). Citing sources makes this safe to repeat: a task that is thrown away leaves the default branch uncited, and the next one folds the same comments again.
-- For each entry now counted twice or more and not yet guarded, propose its `shilaycow-correct` change as scenarios of this task.
+- Fold into the pitfalls file on the task branch every `Retro:` comment and owner comment of a closed tracking issue (a merged task's) that the file does not yet cite as a source, on the default branch or, when you resume, on the task branch (`shilaycow-retro` says how). Citing sources makes this safe to repeat: a task that is thrown away leaves the default branch uncited, and the next one folds the same comments again.
+- For each entry now counted twice or more and not yet guarded, propose its `shilaycow-correct` change as scenarios of this task, unless it says `Correct: none possible at count <n>` and its count is still `<n>`.
 - List the open `later` issues in the areas this task touches and offer to fold them in. When many are open, or they share a cause, suggest a task of their own instead. The user decides either way.
 
 Sharpen the brief with the user (`shilaycow-sharpen`), and design together if they want to (`shilaycow-design`). Answer their questions and discuss as long as they like: nothing you do here dispatches a builder or a verifier. When they say "start", "go" or anything like it, do not start; give them the command.

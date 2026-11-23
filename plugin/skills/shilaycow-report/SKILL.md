@@ -25,7 +25,7 @@ And a table of every scenario in the brief: met or not, and a link to the eviden
 
 ## How
 
-Write in the language set by `report_language`, keeping these headings in English. Lead with the conclusion. Say less, link more.
+Write in English. Lead with the conclusion. Say less, link more.
 
 ## Stop when
 

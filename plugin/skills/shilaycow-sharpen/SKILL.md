@@ -32,7 +32,7 @@ And for every scenario you can name a test that would fail today (or, for one th
 - Write a first draft of the brief from what you already know, then ask about the gaps. Keep the file current as answers arrive.
 - Ask the user about outcomes only: how they will use it, what counts as failure, what they would be upset to find missing. Offering your recommended answer with each question lets them accept in a word.
 - Answer technical questions yourself by reading the repository (`shilaycow-how`, `shilaycow-why`). Do not ask the user what the code can tell you.
-- Write the brief in the language set by `report_language`, English by default, keeping the headings in English.
+- Write the brief in English, whatever language the conversation is in.
 
 ## Stop when
 

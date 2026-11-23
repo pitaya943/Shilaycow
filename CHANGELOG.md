@@ -1,8 +1,17 @@
 # Changelog
 
+## 0.4.1
+
+- **English only.** Briefs, specs, reports and verdicts are written in English, whatever language you talk in; `report_language` is gone from the config. To use another language, fork the skills and change them.
+- **The gate stops a run only for the boundary and the handover**: auto mode, old skill copies in the repository, one task at a time, and the brief you approved. A brief's shape (missing headings, scenarios not as Given / When / Then, absolute wording) is now a warning, listed on the tracking issue. A task started before 0.4.0 is told to finish with its own version.
+- The verifier loads its skill with the Skill tool under either name (`shilaycow-verify`, or `shilaycow:shilaycow-verify` for a plugin install), so a plugin install is no longer mistaken for a missing skill. A ticket judged on its own and unchanged since may keep that verdict at final verification.
+- **A finished task leaves nothing open.** The final pull request says `Closes #<tracking issue>`, so the issue closes when you merge it; the run deletes its `spike/` branches; and `/shilaycow-setup` asks you to turn on **Automatically delete head branches**. Issues are closed, never deleted: the next task reads their `Retro:` comments.
+- A ticket whose check guards a lasting property also adds a test of it to the suite; the verifier lists a property guarded only by a ticket's script. A pitfall that `shilaycow-correct` cannot guard records `Correct: none possible at count <n>` and is not proposed again until it happens more. The trail starts when the task branch does, so decisions before approval carry their own time.
+- **No token.** The gate no longer calls the GitHub API, so auto mode needs no token of the bot and no network secret; if you saved one for `api.github.com`, you can delete it. A token could only prove who owns the token, not which account the session's own GitHub tools act as. The agent now asks its own tools (`get_me`) before a run starts, and the verifier fails a pull request or tracking issue the bot did not open. `/shilaycow-setup` compares the ruleset with the one it ships, setting by setting. Upgrading from 0.3 straight to 0.4.1, follow the 0.4.0 steps below and skip the token in step 6.
+
 ## 0.4.0
 
-**Not compatible with 0.3.x.** The skills no longer read the formats version 0.3 wrote, and `/shilaycow-autopilot` starts nothing in a project that has not been upgraded: its gate names what is left. Follow [Upgrading from 0.3](#upgrading-from-03) before your next task.
+**Not compatible with 0.3.x.** The skills no longer read the formats version 0.3 wrote, and `/shilaycow-autopilot` starts nothing in a project that has not been upgraded: its gate names what is left. Follow **Upgrading from 0.3** below before your next task.
 
 ### What changed
 
@@ -43,18 +52,10 @@
    With the cloud setup script: the script copies and never deletes, so first remove the old folders from the environment, for example by adding `rm -rf "${HOME:-/root}"/.claude/skills/shilaycow-*` before the `cp` line once.
 3. **Delete any copy of the skills inside your repository.** Some projects copied them into `.claude/skills/` (`go`, `setup`, `sharpen`, `verify` and the rest, or `shilaycow-*`). A copy there is loaded beside the installed skills, and the old `go` can start unattended work by itself. Keep your project's own try-it skill, renaming `drive-<app>` to `try-<app>`.
 4. **Give every entry in `.shilaycow/pitfalls.md` a `Sources:` line** naming the tracking issues whose `Retro:` or owner comments are already folded into that entry, for example `Sources: #2, #6`. Leave out a tracking issue whose Retro is not in the file yet: the next task folds it, and only if no entry cites it. If 0.3's `shilaycow-correct` deleted an entry and no other entry cites its source, add one line for it under a `## Guarded` heading at the end, with its `Sources:`, so it is not folded back in.
-5. **Rename the old headings** in `docs/spec/` and in any brief you will reuse, and delete any 預算 or Budget section from them; nothing reads it any more. Merged reports can stay as they are. If you have no `docs/spec/` and no brief to reuse, skip this step.
+5. **Bring old headings up to date** in `docs/spec/` and in any brief you will reuse, and delete any budget section from them; nothing reads it any more. Merged reports can stay as they are. If you have no `docs/spec/` and no brief to reuse, skip this step. The 0.4 headings are:
 
-   | 0.3 heading | 0.4 heading |
-   |---|---|
-   | 情境 | Scenarios |
-   | 規則 | Rules |
-   | 尚未建置 | Not yet built |
-   | 目標 | Goal |
-   | 不做什麼 | Out of scope |
-   | 怎麼試 | How to try it |
-   | 假設 | Assumptions |
-   | 謹慎程度 or Care level | Critical areas: list the areas where any change matters, or write None |
+   - in `docs/spec/`: Scenarios, Rules, Not yet built;
+   - in a brief: Goal, Out of scope, Scenarios, How to try it, Critical areas, Assumptions. Critical areas replaces Care level: list the areas where any change matters, or write None.
 
    Steps 3 to 5 are renames and deletions; any session can do them in manual mode, in one pull request you merge.
 6. **Run `/shilaycow-setup` again.** Its pull request replaces `merge_unit` and `budget` with `mode: auto` in `.shilaycow/config.yml`, adds `.shilaycow/worktrees/` to `.gitignore`, and walks you through the one new step: a read-only token of the bot for the gate. It checks the token by running the gate on its own branch, before you merge it.

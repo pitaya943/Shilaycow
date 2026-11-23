@@ -41,7 +41,7 @@ Write in the present tense, with these headings in English. Scenarios holds only
 
 Let the tree grow only when it has to. A small system is one area file. When an area grows past what a reader can hold at once (about 150 lines is a fair sign), make it a folder, `<area>/index.md` with a file for each part, and keep the links in the index working.
 
-To build a first spec for a project that has none, write what you can show: read the tests, run the product (`shilaycow-how`, `try-<app>`), and mark anything you inferred and could not run as unverified. Write in the language set by `report_language`.
+To build a first spec for a project that has none, write what you can show: read the tests, run the product (`shilaycow-how`, `try-<app>`), and mark anything you inferred and could not run as unverified. Write in English.
 
 ## Stop when
 

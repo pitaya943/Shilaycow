@@ -23,10 +23,10 @@ Quality comes from checking results (an independent verifier, reading the code, 
 | A GitHub repository where rulesets are available: public, or private on a plan that offers them | the ruleset is what keeps the agent out of `main` |
 | A second GitHub account for the agent (the bot), invited to the repository with the **Write** role, never Maintain or Admin | the agent can push branches and open pull requests, but cannot change the ruleset |
 | The ruleset from `shilaycow-setup` active on the default branch | `main` changes only through a pull request you merge |
+| The repository setting **Automatically delete head branches** turned on | a task's and its tickets' branches go once merged; tracking issues close when you merge the task, through `Closes #<n>` |
 | Sessions that act as the bot: in a cloud environment, GitHub connected on claude.ai as the bot account, with the Claude GitHub App installed on the repository; on your own computer, `git` and `gh` logged in as the bot | acting as you would put the agent past the ruleset |
 | Permission for the session to push `task/`, `work/` and `spike/` branches. A cloud session may push only its own `claude/…` branch until you allow more, so say so when you start it | the task's work lives on those branches |
-| A token of the bot that can read the repository, saved where the gate can use it: in a cloud environment, a network secret for `api.github.com` (header `Authorization: Bearer <token>`); on your own computer, `GITHUB_TOKEN` or `gh` logged in as the bot. For a public repository, a fine-grained token with **Public repositories** access and no permissions; for a private one, a classic token with the `repo` scope, since a fine-grained token cannot select a repository another account owns | the gate asks GitHub itself who the session is, what role the bot holds, and whether the ruleset is active |
-| Network access to `github.com` (installing the skills, `git`) and `api.github.com` (the gate). Saving the network secret above also allows `api.github.com` | |
+| Network access to `github.com` (installing the skills, `git`) | |
 | Python 3.9 or later in the session | the gate is a Python script |
 | Sessions able to start other sessions, for the independent verifier, and a setup script that installs the skills in every one of them from a source any session can reach, such as the script below. A verifier session carries only the repository it judges, so a script that copies the skills from another repository gives it none; it then stops and says so. Where the agent cannot start sessions, it falls back to a subagent and says so in the report | the verifier must share nothing with whoever built the work |
 
@@ -58,7 +58,7 @@ git clone -q --depth 1 https://github.com/pitaya943/shilaycow.git /tmp/shilaycow
   || echo "shilaycow skills were not installed"
 ```
 
-Every session started in that environment has the skills as `/shilaycow-chief`, `/shilaycow-sharpen`, and so on. A plugin installed on your own computer is not available in cloud sessions, so use the script there. To stay on one version, add `--branch v0.4.0` to the `git clone`.
+Every session started in that environment has the skills as `/shilaycow-chief`, `/shilaycow-sharpen`, and so on. A plugin installed on your own computer is not available in cloud sessions, so use the script there. To stay on one version, add `--branch v0.4.1` to the `git clone`.
 
 **Upgrading from 0.3.x:** version 0.4 is not compatible. Follow the steps in [CHANGELOG.md](CHANGELOG.md) before your next task.
 
@@ -66,7 +66,7 @@ Every session started in that environment has the skills as `/shilaycow-chief`, 
 
 1. **Once per repository**, if you want the agent to work unattended (auto mode): run `/shilaycow-setup`. Without it every skill still works in manual mode, where you call each one yourself. It walks you through the two steps only you can do on github.com (invite a bot account as a Write collaborator, import the ruleset that protects `main`), writes `.shilaycow/config.yml`, and opens a pull request for you to merge.
 2. **For every task**, start with `/shilaycow-chief` and describe what you want. Discuss as long as you like; it writes the brief on the task's branch.
-3. **When you approve the brief**, type `/shilaycow-autopilot`. It runs a gate first (auto mode is on, it acts as the bot, the brief is complete and is the version you approved, no other task is open) and starts nothing unless every check holds; if one fails it tells you what to fix. Nothing else starts the unattended part, whatever you type to the Chief.
+3. **When you approve the brief**, type `/shilaycow-autopilot`. It runs a gate first (auto mode is on, the brief is the version you approved, no other task is open; anything off in the brief's shape is a warning, not a stop), and the agent confirms with its own GitHub tools that it acts as the bot. Nothing starts unless every check holds; if one fails, it tells you what to fix. Nothing else starts the unattended part, whatever you type to the Chief.
 
 Skipping step 1 is fine: every skill works on its own in your session, and nothing is merged for you.
 

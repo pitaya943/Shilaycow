@@ -9,7 +9,7 @@ Find what went wrong in this task that would go wrong again, and write it where 
 
 ## Inputs
 
-What the owner found wrong after merging earlier tasks (their comments on finished tracking issues): read these first, because each is something verification missed. Then the finished task: FAIL verdicts, the findings attached to PASS verdicts, fix rounds, CI failures, the owner's corrections and send-backs, the `later` issues it opened, and `docs/tasks/<slug>/trail.tsv`. Read `.shilaycow/pitfalls.md` first.
+What the owner found wrong after merging earlier tasks (their comments on closed tracking issues): read these first, because each is something verification missed. Then the finished task: FAIL verdicts, the findings attached to PASS verdicts, fix rounds, CI failures, the owner's corrections and send-backs, the `later` issues it opened, and `docs/tasks/<slug>/trail.tsv`. Read `.shilaycow/pitfalls.md` first.
 
 ## Done when
 
@@ -18,6 +18,7 @@ You have worked out what `.shilaycow/pitfalls.md` should say after this task:
 - each new pitfall has four lines: what happened (with a pull request or commit), how to avoid it, how many times it has happened, and `Sources:`, the tracking issues it came from;
 - a pitfall of a class already listed raises that entry's count and adds its source instead of adding an entry; so does a class of gap that `later` issues from two tasks share;
 - every entry kept passes three tests: it will still hold in six months, it would change what the next agent does, and it is not a one-off detail such as a version, a hash or a count;
+- an entry may carry `Correct: none possible at count <n> (<link>)` from `shilaycow-correct`; keep it, and when the count rises past `<n>` say so, since the entry is due again;
 - the file holds at most 30 entries above its `## Guarded` section: merge near-duplicates or drop what no longer holds before adding, keeping their sources.
 
 And you have said which entries now have a count of 2 or more: those are for `shilaycow-correct`.

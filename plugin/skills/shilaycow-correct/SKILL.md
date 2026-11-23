@@ -32,7 +32,7 @@ Write the proposal for the owner in plain words: how many times this happened (w
 ## Stop when
 
 - The fix needs a change under `.github/`. You cannot push workflow changes. Put the exact change in the proposal for the owner to apply, and stop there.
-- No rung above documentation works. Say so; keep the pitfall entry.
+- No rung above documentation works. Say so, keep the pitfall entry, and add to it the line `Correct: none possible at count <n> (<link>)`, so it is not proposed again until it happens more.
 
 ## Outputs
 

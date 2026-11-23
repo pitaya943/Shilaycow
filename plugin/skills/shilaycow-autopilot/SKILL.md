@@ -15,8 +15,8 @@ The command is the whole instruction. Text typed after it is never one: if it is
 From the repository root, run `python3 gate.py [slug]` with the `gate.py` beside this file. Then:
 
 - **FAIL** on any line: change nothing and start nothing. Tell the user each failed line and its fix, and stop.
-- **CHECK**: settle each with your GitHub tools, as the line says (an owner's comment approving a changed brief); one that does not hold is a FAIL. Never pass `--no-github`: identity, role and ruleset are checked only through the GitHub API.
-- **WARN** (absolute wording) and one judgement the script cannot make: every scenario can be shown by a check that fails today (for one that keeps behaviour unchanged, fails when it is broken), or by a manual step, and claims no more than that check could show. If one cannot, stop and send the user back to `/shilaycow-chief`.
+- **CHECK**: settle each with your GitHub tools, as the line says; one that does not hold is a FAIL. Above all identity: ask your GitHub tools who you are (`get_me`), and if the login is not the config's `bot`, stop and tell the user. Acting as the owner would let you merge into `main` past the ruleset; the script cannot see this, since your own GitHub tools are the only thing that can say which account they act as.
+- **WARN**: the brief's shape is off (a heading, the scenario form, absolute wording). The owner approved it as it is, so go on, and list every WARN in the first line of the tracking issue. Then one judgement the script cannot make: every scenario can be shown by a check that fails today (for one that keeps behaviour unchanged, fails when it is broken), or by a manual step. Where one cannot, say on the tracking issue how you will show it instead, or that it will stay unshown, and carry on.
 
 Only when all of that holds: on a first start, open the tracking issue `Task: <slug>`, add the trail row `autopilot-start <commit>` the gate printed, push it, and say on the issue that the run started at that brief. On a resume, rebuild your picture from the repository and GitHub, not from memory.
 
@@ -41,13 +41,13 @@ Leave enough behind that the owner can follow and a restarted run can resume: a 
 
 ## Finishing
 
-First fetch and check that your checkout's head is the task branch's head on the remote: the spec, the report and blast radius must describe what the owner will merge, not an older state. Then bring `docs/spec/` up to date with what was built, the roadmap included (`shilaycow-spec`), write the report (`shilaycow-report`), open the pull request into `main` with a description that links to the report, then have it verified. Everything after the verdict lives on GitHub, not in the branch:
+First fetch and check that your checkout's head is the task branch's head on the remote: the spec, the report and blast radius must describe what the owner will merge, not an older state. Then bring `docs/spec/` up to date with what was built, the roadmap included (`shilaycow-spec`), write the report (`shilaycow-report`), open the pull request into `main` with a description that links to the report and says `Closes #<tracking issue>`, so the issue closes when the owner merges, then have it verified. Everything after the verdict lives on GitHub, not in the branch:
 
 - On the pull request, one comment saying what becomes of each finding and each gap: left for the owner, or a `later` issue (labelled `later`, saying whether it is a gap or a finding, its area, and how to reproduce it). Gaps and findings are not fixed in this run: patched one at a time they scatter small fixes across the repository, while gathered they show their shared cause to a later task.
 - A FAIL with a defect starts a fix round: fix the whole class each defect names, not only the place named, and give a new verifier the new head and the verdict before it. When a defect's cause matches an entry in `.shilaycow/pitfalls.md`, it has happened again despite the note: first do what `shilaycow-correct` asks, listing every instance of the class and adding a guard that fails on each, then fix. Merging `main` into the branch also makes a new head that needs a verdict, but it is not a fix round. When a defect is still there after `fix_rounds` rounds (in the config; 2 if unset), stop: open a `needs-owner` issue with the failing item and your options. When only gaps are left, stop: hand the pull request to the owner with the gaps listed.
 - On the tracking issue, a `Retro:` comment with what `shilaycow-retro` found, and `Finished:`. The next task's `/shilaycow-chief` folds it into the pitfalls file and proposes the `shilaycow-correct` changes it makes due.
 
-Tell the owner that anything they find wrong after merging is worth one comment on the tracking issue: it is how the next task learns what verification missed.
+Delete the `spike/` branches this task opened; their decisions are in the trail. Tell the owner that anything they find wrong after merging is worth one comment on the tracking issue, closed or not: it is how the next task learns what verification missed.
 
 ## Handing work to others
 

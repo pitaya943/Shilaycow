@@ -4,44 +4,39 @@
 Run from the root of the project's repository:
 
     python3 <this skill's folder>/gate.py [slug]
-    python3 <this skill's folder>/gate.py --github-only    (for shilaycow-setup: no task yet)
 
 Each line of output is one check:
 
     PASS   it holds
     FAIL   it does not; the line says what to do about it
     CHECK  a judgement only you can make, with what to look at
-    WARN   a hint for a judgement only you can make
+    WARN   it does not quite hold, but nothing irreversible follows; say so and go on
+
+What may FAIL: only the boundary (auto mode, the old skill copies that could start work on
+their own) and the handover (which task, one at a time, the brief the owner approved). The
+shape of the brief is a WARN: the owner has read and approved it, and its form being off
+cannot cost what an unwanted unattended run can. Each check names, in a comment, the real
+failure it grew from; a check that cannot is removed.
 
 The last line says whether the gate is open. Exit status 1 when anything FAILed, else 0.
 
 Why a script: a check written only as prose can be "judged" to roughly pass. These are
 facts about the repository with one right answer, so they are computed, not weighed.
-It uses git, and the GitHub REST API for what only GitHub knows (who the session acts as,
-the rules on the default branch, the bot's role). The API needs a token for the bot: in a
-cloud environment a network secret for api.github.com that the proxy adds to each request,
-elsewhere GITHUB_TOKEN, GH_TOKEN or a logged-in `gh`. The toolkit README says how to set it up.
-SHILAYCOW_GITHUB_API points the script at another API base URL (the tests use a local one).
+It uses git only. Who the session acts as is left to a CHECK on purpose: a script can only
+ask GitHub with a credential of its own, which says nothing about the account the session's
+own GitHub tools and pushes use. Only those tools can answer that.
 """
 
-import json
-import os
 import re
-import ssl
-import urllib.error
-import urllib.request
-from pathlib import Path
 import subprocess
 import sys
 
 # The brief's headings.
 BRIEF_HEADINGS = ["Goal", "Out of scope", "Scenarios", "How to try it", "Critical areas", "Assumptions"]
 
-# Headings version 0.3 wrote. They are not read as the new ones: finding one means the project
-# has not been upgraded, and the gate says so instead of guessing.
-OLD_HEADINGS = {"目標": "Goal", "不做什麼": "Out of scope", "情境": "Scenarios", "怎麼試": "How to try it",
-                "謹慎程度": "Critical areas", "Care level": "Critical areas", "假設": "Assumptions",
-                "規則": "Rules", "尚未建置": "Not yet built"}
+# A heading version 0.3 wrote that 0.4 replaced. It is not read as the new one: finding it means
+# the project has not been upgraded, and the gate says so instead of guessing.
+OLD_HEADINGS = {"Care level": "Critical areas"}
 UPGRADE = "written by version 0.3 -> follow 'Upgrading from 0.3' in the shilaycow CHANGELOG"
 
 # Names the harness's skills had before 0.4, when some projects copied them into the repository.
@@ -52,7 +47,7 @@ OLD_SKILL_NAMES = {"blast-radius", "correct", "design", "drive", "go", "how", "p
                    "report", "retro", "setup", "sharpen", "spec", "status", "trail", "try-it", "verify", "why"}
 
 # Words that often mark a scenario promising more than a finite check can show.
-ABSOLUTE = re.compile(r"\b(all|any|every|always|never|wherever|no matter)\b|全部|任何|所有|不論|一律", re.I)
+ABSOLUTE = re.compile(r"\b(all|any|every|always|never|wherever|no matter)\b", re.I)
 
 # The tokens in trail.tsv, each followed by the commit that last changed the brief: the Chief
 # writes the first when the owner approves the brief, autopilot the second when a run starts.
@@ -117,139 +112,30 @@ def old_headings(markdown):
 def check_brief(report, brief):
     old = old_headings(brief)
     if old:
-        report.add("FAIL", "brief", f"headings {', '.join(old)}: {UPGRADE}")
-        return
+        # Grew from: 0.4.0 replacing Care level (CHANGELOG, Upgrading from 0.3).
+        report.add("WARN", "brief", f"headings {', '.join(old)}: {UPGRADE}")
+    # Grew from: a scenario that promised more than a check could show, and the headings the
+    # other skills read. Shape only: a WARN.
     found = sections(brief)
     for name in BRIEF_HEADINGS:
         hit = find_section(found, name)
         if hit is None:
-            report.add("FAIL", f"brief: {name}", "heading missing -> fill it in with /shilaycow-chief")
+            report.add("WARN", f"brief: {name}", "heading missing -> worth filling in with /shilaycow-chief")
         elif not hit[1].strip():
-            report.add("FAIL", f"brief: {name}", "heading is empty -> fill it in with /shilaycow-chief")
+            report.add("WARN", f"brief: {name}", "heading is empty -> worth filling in with /shilaycow-chief")
         else:
             report.add("PASS", f"brief: {name}")
     scenarios = find_section(found, "Scenarios")
     if scenarios and scenarios[1].strip():
         body = scenarios[1]
         if not re.search(r"\bS-\d+", body) or not all(w in body.lower() for w in ("given", "when", "then")):
-            report.add("FAIL", "brief: scenarios", "need numbered scenarios S-1, S-2, ... written as Given / When / Then")
+            report.add("WARN", "brief: scenarios", "scenarios are clearest numbered S-1, S-2, ... as Given / When / Then")
         for line in body.splitlines():
-            if ABSOLUTE.search(line) and re.search(r"\bthen\b|那麼", line, re.I):
+            if ABSOLUTE.search(line) and re.search(r"\bthen\b", line, re.I):
                 report.add("WARN", "brief: absolute wording", f"'{line.strip()[:90]}' -> does a finite check really show this?")
 
 
-SETUP_HINT = "see Requirements in the shilaycow README"
-
-
-def github_token():
-    """A token from the environment or the GitHub CLI; None when there is none, which is
-    normal in a cloud environment, where the proxy adds the network secret instead."""
-    for name in ("GITHUB_TOKEN", "GH_TOKEN"):
-        if os.environ.get(name):
-            return os.environ[name]
-    try:
-        result = subprocess.run(["gh", "auth", "token"], capture_output=True, text=True, timeout=10)
-    except (OSError, subprocess.TimeoutExpired):
-        return None
-    return result.stdout.strip() or None if result.returncode == 0 else None
-
-
-def api(path, token):
-    """GET one GitHub API path. Returns (status, parsed body); status None means no answer."""
-    base = os.environ.get("SHILAYCOW_GITHUB_API", "https://api.github.com").rstrip("/")
-    request = urllib.request.Request(base + path, headers={
-        "Accept": "application/vnd.github+json", "User-Agent": "shilaycow-gate",
-        **({"Authorization": f"Bearer {token}"} if token else {})})
-    cafile = os.environ.get("SSL_CERT_FILE") or os.environ.get("REQUESTS_CA_BUNDLE")
-    context = ssl.create_default_context(cafile=cafile) if cafile else None
-    try:
-        with urllib.request.urlopen(request, timeout=15, context=context) as response:
-            return response.status, json.loads(response.read() or b"null")
-    except urllib.error.HTTPError as error:
-        return error.code, None
-    except (urllib.error.URLError, OSError, ValueError) as error:
-        return None, str(error)
-
-
-def github_checks(report, owner_repo, branch, bot):
-    """Who the session acts as, the rules on the default branch, and the bot's role."""
-    token = github_token()
-    status, user = api("/user", token)
-    if status is None:
-        report.add("FAIL", "GitHub API", f"no answer from the GitHub API ({user}) -> allow api.github.com; {SETUP_HINT}")
-        return
-    if status in (401, 403) or not isinstance(user, dict):
-        report.add("FAIL", "GitHub API", f"the API refused the request ({status}): no token for the bot -> {SETUP_HINT}")
-        return
-    login = user.get("login")
-    if login != bot:
-        report.add("FAIL", "identity", f"the token belongs to '{login}', not the bot '{bot}' -> "
-                   "use a token of the bot; never run unattended as the owner")
-        return
-    report.add("PASS", "identity", f"acting as the bot '{bot}'")
-
-    status, repo = api(f"/repos/{owner_repo}", token)
-    permissions = repo.get("permissions", {}) if status == 200 and isinstance(repo, dict) else None
-    if permissions is None:
-        report.add("FAIL", "role", f"cannot read {owner_repo} ({status}) -> the bot must be a collaborator, and its token must reach this repository")
-    elif permissions.get("admin") or permissions.get("maintain"):
-        report.add("FAIL", "role", "the bot holds an admin or maintain role, so it could change the ruleset -> give it Write only")
-    elif not permissions.get("push"):
-        report.add("FAIL", "role", "the bot cannot push -> give it the Write role")
-    else:
-        report.add("PASS", "role", "the bot can push and cannot change settings")
-
-    status, rules = api(f"/repos/{owner_repo}/rules/branches/{branch}", token)
-    if status != 200 or not isinstance(rules, list):
-        report.add("FAIL", "ruleset", f"cannot read the rules on {branch} ({status}) -> {SETUP_HINT}")
-        return
-    check_rules(report, branch, rules)
-
-
-def check_rules(report, branch, rules):
-    """Compare the rules in force with the ruleset shilaycow-setup ships.
-
-    Two things are the boundary and FAIL: a pull request is required, and it needs at least
-    one approval (with none, the bot could merge its own pull request into the branch). The
-    rest narrows what a mistake can cost without being the boundary, so a difference is a WARN
-    naming the setting. Several rulesets can apply to one branch; the strictest value counts."""
-    shipped = Path(__file__).resolve().parent.parent / "shilaycow-setup" / "ruleset.json"
-    expected = json.loads(shipped.read_text(encoding="utf-8"))["rules"] if shipped.exists() else []
-    types = {r.get("type") for r in rules}
-    pull_requests = [r.get("parameters") or {} for r in rules if r.get("type") == "pull_request"]
-    if not pull_requests:
-        report.add("FAIL", "ruleset", f"{branch} does not require a pull request -> run /shilaycow-setup")
-        return
-    approvals = max(p.get("required_approving_review_count", 0) for p in pull_requests)
-    if approvals < 1:
-        report.add("FAIL", "ruleset", f"{branch} requires {approvals} approvals, so the bot could merge its own "
-                   "pull request -> set Required approvals to 1 (shilaycow-setup)")
-        return
-    report.add("PASS", "ruleset", f"{branch} requires a pull request with {approvals} approval(s)")
-    if not expected:
-        report.add("WARN", "ruleset", "ruleset.json is not beside shilaycow-setup, so the other settings were not compared")
-    for rule in expected:
-        if rule["type"] != "pull_request" and rule["type"] not in types:
-            report.add("WARN", "ruleset", f"{branch} has no '{rule['type']}' rule, which ruleset.json has -> see shilaycow-setup")
-        for key, want in (rule.get("parameters") or {}).items():
-            if key == "required_approving_review_count":
-                continue
-            have = any(p.get(key) for p in pull_requests) if isinstance(want, bool) else max(p.get(key, 0) for p in pull_requests)
-            if have != want:
-                report.add("WARN", "ruleset", f"{key} is {json.dumps(have)} on {branch}, {json.dumps(want)} in ruleset.json "
-                           "-> see shilaycow-setup")
-
-
-def owner_repo_of_origin():
-    """owner/repo from the origin URL, whatever its form (ssh, https, or a session proxy)."""
-    remote = git("remote", "get-url", "origin") or ""
-    match = re.search(r"[:/]([^/:]+)/([^/]+?)(?:\.git)?/?$", remote)
-    return f"{match.group(1)}/{match.group(2)}" if match else "<owner>/<repo>"
-
-
 def main(argv):
-    use_github = "--no-github" not in argv
-    github_only = "--github-only" in argv
     args = [a for a in argv if not a.startswith("--")]
     report = Report()
 
@@ -259,13 +145,9 @@ def main(argv):
     head = git("symbolic-ref", "--short", "refs/remotes/origin/HEAD") or "origin/main"
     default = head.split("/", 1)[1]
 
-    # 1. The config asks for auto mode. It is read from the default branch, except with
-    # --github-only: setup runs that on its own branch, before its pull request is merged.
-    local = Path(".shilaycow/config.yml")
-    if github_only and local.exists():
-        text = local.read_text(encoding="utf-8")
-    else:
-        text = git("show", f"{head}:.shilaycow/config.yml")
+    # 1. The config on the default branch asks for auto mode. Grew from: the boundary itself;
+    # without setup there is no bot and no ruleset to keep an unattended run out of main.
+    text = git("show", f"{head}:.shilaycow/config.yml")
     if text is None:
         report.add("FAIL", "config", "no .shilaycow/config.yml on the default branch: this is manual mode -> run /shilaycow-setup")
         return finish(report)
@@ -278,11 +160,10 @@ def main(argv):
         report.add("FAIL", "config", f"mode is '{mode}', not 'auto' -> run /shilaycow-setup")
         return finish(report)
     report.add("PASS", "config", "mode is auto")
-    if github_only:
-        github_checks(report, owner_repo_of_origin(), default, config.get("bot", ""))
-        return finish(report)
 
     # No copy of the harness's skills inside the repository: they would be loaded beside these.
+    # Grew from: an old `go` copy, still in a repository after an upgrade, that could be called
+    # and start unattended work by itself.
     copies = [name for name in (git("ls-tree", "--name-only", f"{head}:.claude/skills") or "").splitlines()
               if (name in OLD_SKILL_NAMES or name.startswith("shilaycow-"))
               and ".shilaycow" in (git("show", f"{head}:.claude/skills/{name}/SKILL.md") or "")]
@@ -291,15 +172,8 @@ def main(argv):
     else:
         report.add("PASS", "skill copies", "no copy of the harness's skills in the repository")
 
-    # The living spec on the default branch must have been upgraded too.
-    spec_files = [f for f in (git("ls-tree", "-r", "--name-only", head, "docs/spec") or "").splitlines() if f.endswith(".md")]
-    stale = [f for f in spec_files if old_headings(git("show", f"{head}:{f}") or "")]
-    if stale:
-        report.add("FAIL", "spec", f"{', '.join(stale)} {UPGRADE}")
-    elif spec_files:
-        report.add("PASS", "spec", "docs/spec/ uses the current headings")
-
-    # 2. Exactly one open task, and it has a branch.
+    # 2. Exactly one open task, and it has a branch. Grew from: one task at a time (the next
+    # starts from the merged main), and autopilot needing to know which brief it runs.
     open_tasks = [b.strip().removeprefix("origin/") for b in
                   (git("branch", "-r", "--no-merged", head, "--list", "origin/task/*") or "").splitlines() if b.strip()]
     if args:
@@ -316,14 +190,14 @@ def main(argv):
     if git("rev-parse", "--verify", "--quiet", f"origin/{branch}") is None:
         report.add("FAIL", "task", f"no {branch} on the remote -> agree a brief with /shilaycow-chief first")
         return finish(report)
-    report.add("PASS", "task", f"{branch} exists on the remote, so this session can push task branches")
+    report.add("PASS", "task", f"{branch} exists on the remote")
     others = [b for b in open_tasks if b != branch]
     if others:
         report.add("FAIL", "one task at a time", f"{', '.join(others)} not merged into {default} -> merge it, or delete its branch if it was abandoned")
     else:
         report.add("PASS", "one task at a time")
 
-    # 3. The brief is complete.
+    # 3. The brief exists (a FAIL: nothing to run without it) and is in shape (WARNs).
     brief = git("show", f"origin/{branch}:docs/tasks/{slug}/brief.md")
     if brief is None:
         report.add("FAIL", "brief", f"no docs/tasks/{slug}/brief.md on {branch} -> agree it with /shilaycow-chief")
@@ -331,11 +205,19 @@ def main(argv):
     check_brief(report, brief)
 
     # 4. The owner approved this very brief; on a resume, has it changed since the run started?
+    # Grew from: a gate that opened on a draft brief, and a start recorded against a later commit
+    # than the one approved.
     brief_commit = git("log", "-1", "--format=%h", f"origin/{branch}", "--", f"docs/tasks/{slug}/brief.md") or ""
     trail = git("show", f"origin/{branch}:docs/tasks/{slug}/trail.tsv") or ""
     approvals = re.findall(rf"{APPROVED_TOKEN}\s+([0-9a-f]{{7,40}})", trail)
     starts = re.findall(rf"{START_TOKEN}\s+([0-9a-f]{{7,40}})", trail)
-    if not approvals:
+    if not approvals and starts:
+        # Grew from: a task started before 0.4.0, which has a start and no approval, and which the
+        # plain message below called unapproved.
+        report.add("FAIL", "approval", f"this task started under a version before 0.4.0 ('{START_TOKEN}' with no "
+                   f"'{APPROVED_TOKEN}') -> finish it with that version, or drop it: step 1 of 'Upgrading from 0.3' "
+                   "in the shilaycow CHANGELOG")
+    elif not approvals:
         report.add("FAIL", "approval", f"no '{APPROVED_TOKEN}' row in trail.tsv: the owner has not approved this brief "
                    "-> approve it with /shilaycow-chief")
     elif approvals[-1][:7] != brief_commit[:7]:
@@ -351,11 +233,10 @@ def main(argv):
         report.add("CHECK", "start", f"the brief changed after the run started ({starts[-1][:7]} -> {brief_commit}): "
                    "go on only if the owner approved the change in a comment on the tracking issue, from their own account")
 
-    # 5. What only GitHub knows.
-    if use_github:
-        github_checks(report, owner_repo_of_origin(), default, config.get("bot", ""))
-    else:
-        report.add("CHECK", "GitHub", "skipped (--no-github): identity, role and ruleset were not checked")
+    # 5. Who this session acts as: only its own GitHub tools can say. Grew from: the boundary;
+    # acting as the owner would let the agent merge into main past the ruleset.
+    report.add("CHECK", "identity", f"ask your GitHub tools who you are (get_me): the login must be the bot "
+               f"'{config.get('bot', '')}'. Anything else, the owner above all, and stop: change nothing")
     return finish(report)
 
 
