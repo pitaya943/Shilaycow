@@ -1,6 +1,6 @@
 ---
 name: shilaycow-report
-description: Use at the end of a task to write what was done for the person who will decide whether to merge it. Produces the final report that the pull request into main links to.
+description: "Use at the end of a task to write the final report the pull request into main links to, for the person deciding whether to merge. Don't use to record decisions as they happen: use shilaycow-trail."
 ---
 
 # Report

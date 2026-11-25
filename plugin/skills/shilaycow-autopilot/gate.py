@@ -136,17 +136,27 @@ def check_brief(report, brief):
 
 
 def commits_after(trail, token):
-    """The commit on each trail row that carries the token, in order. The commit is the first
-    hash after the token on that row, so a model that put the word and the commit in two cells
-    of one row is still read right."""
+    """The commit on each trail row that records the token, in order.
+
+    A row records it in one cell that is exactly '<token> <commit>', or, when a model split the
+    word and the commit, in a cell that is exactly the token followed later by a cell that is
+    exactly a commit. A token inside prose ("previous brief-approved 1a2b3c4 superseded") is not
+    a record: reading the first hash after it would take an old commit for the current one."""
+    whole = re.compile(rf"^{re.escape(token)}\s+([0-9a-f]{{7,40}})$")
+    commit = re.compile(r"^[0-9a-f]{7,40}$")
     found = []
     for row in trail.splitlines():
-        at = row.find(token)
-        if at < 0:
-            continue
-        match = re.search(r"\b([0-9a-f]{7,40})\b", row[at + len(token):])
-        if match:
-            found.append(match.group(1))
+        cells = [c.strip() for c in row.split("\t")]
+        for i, cell in enumerate(cells):
+            match = whole.match(cell)
+            if match:
+                found.append(match.group(1))
+                break
+            if cell == token:
+                later = next((c for c in cells[i + 1:] if commit.match(c)), None)
+                if later:
+                    found.append(later)
+                break
     return found
 
 
@@ -154,7 +164,9 @@ def main(argv):
     args = [a for a in argv if not a.startswith("--")]
     report = Report()
 
-    if git("fetch", "--quiet", "origin") is None:
+    # --prune: a task branch deleted on GitHub (merged by squash, or abandoned) must not linger here
+    # as an open task the owner can no longer merge or delete.
+    if git("fetch", "--prune", "--quiet", "origin") is None:
         report.add("FAIL", "remote", "cannot fetch from origin -> check the network and the repository access")
         return finish(report)
     head = git("symbolic-ref", "--short", "refs/remotes/origin/HEAD") or "origin/main"

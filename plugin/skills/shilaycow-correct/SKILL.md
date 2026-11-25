@@ -1,6 +1,6 @@
 ---
 name: shilaycow-correct
-description: Use when the same class of mistake has happened twice in a project, to propose a change that makes it impossible instead of another note asking agents to be careful.
+description: "Use when the same class of mistake has happened twice, to propose a change to the repository (a type, a lint, a test, a hook) that makes it impossible. Don't use for a first occurrence: record it with shilaycow-retro."
 ---
 
 # Correct

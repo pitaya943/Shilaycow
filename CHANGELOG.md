@@ -1,5 +1,44 @@
 # Changelog
 
+## 0.5.0
+
+### The boundary
+
+- **GitHub refuses to merge a head nobody judged.** Setup adds the workflow `shilaycow-verdict`, which posts the status `shilaycow/verdict` on each pull request the bot opens into the default branch: green only when the newest verdict naming that exact commit is a PASS. Once the setup pull request is merged, make that status required in the ruleset, with GitHub Actions as its source (`by-hand.md` step 2). A push after the verdict, from any session, turns it red. The workflow runs from the default branch's copy and runs no code from the pull request, and the hook blocks posting a status or check by hand.
+- **A second lock on `main`, in your repository.** `/shilaycow-setup` now adds a hook to `.claude/settings.json` that stops a push to the default branch, a push of every branch, and any merge Claude asks GitHub to make (through the API, `gh pr merge` or a GitHub tool), whoever the session acts as. Your own merge button on GitHub is untouched: the hook sees only what Claude runs. The ruleset still keeps the bot out; the hook also covers a session that is connected as you, which the ruleset lets through. It also stops Claude merging for you in this repository: you merge on GitHub. A merge on GitHub's side names only the pull request, not the branch it changes, so the hook cannot tell `main` from a task branch and blocks them all; a push names its target branch, so autopilot lands each ticket with a local `git merge` and a push of the task branch, which the hook allows. Projects set up before: run `/shilaycow-setup` again.
+- **The hook is harder to get around.** It reads a push however it is wrapped (`env`, `command`, `sudo`, `bash -c`), follows a `git checkout`, `git switch` or `cd` earlier on the same line, blocks the API calls that merge, move a branch or write a file on the default branch, and blocks a push or merge built at run time. Pushes now name their branch (`git push origin <branch>`).
+- **Two runs on one task cannot lose work, so there is no lock to get stuck.** Every push to a `task/` or `work/` branch is a compare-and-swap on the commit fetched (`--force-with-lease=<branch>:<commit>`), and a push to the task branch must also contain that commit; the hook refuses any other push and says how to do it. A ticket is claimed by creating its branch, which only one session can do; the tracking issue is the one the trail's `tracking-issue` row names. Two first starts cannot both go on: the start row is itself a compare-and-swap, and the run that loses stops. Setup adds `.gitattributes` with `docs/tasks/*/trail.tsv merge=union`, so trail rows appended at once by two sessions both survive a merge. A `needs-owner` issue is named in the trail, so any run reads its answer. A second run on a resume only duplicates effort. Autopilot never edits the brief; when `/shilaycow-chief` records a changed brief, the run checks the gate again and re-plans what is not landed.
+- **The gate prunes deleted branches and reads only real approval rows.** A task branch deleted on GitHub no longer counts as an open task, and a trail row that only mentions `brief-approved` in a sentence is not taken for an approval.
+- Once your project runs its tests in a workflow, setup asks you to make that check required in the ruleset, so a red suite cannot be merged.
+
+### Unattended runs
+
+- **A long run keeps its goal in view.** The tracking issue has a goal list, a comment marked `<!-- shilaycow:goal-list -->`: the session running the task, the newest owner comment acted on, the fix rounds used, the goal, what is left with each ticket's risk, and what the run is waiting on. Autopilot keeps it current and reads it again before each ticket and when it resumes.
+- **You are heard during a run.** Before each ticket, each session it starts and each verdict it acts on, autopilot reads your new comments, so a `stop` or an answer to a `needs-owner` issue takes effect within one step. After a `stop`, typing `/shilaycow-autopilot` continues; a comment does not.
+- **A verdict counts only for the head it judged.** Nothing is pushed while a verifier judges; a verdict for an older head is not used; fix rounds refresh the spec and the report; `Finished:` tells you to run `/shilaycow-autopilot` again if you update the branch before merging.
+- Crashes and parallel work leave consistent state: the tracking issue is the one the trail names and the goal list is found by its marker; a ticket's trail rows land in the same commit as its work; pushes merge the latest task branch first and never rebase it; builders start from the current task branch; ticket status in a shared table is set by autopilot, not by parallel builders; pitfalls cite comment links, so a later owner comment is still folded and a Retro is never counted twice.
+- Where a session cannot delete a `spike/` branch, the run lists it in `Finished:` for you to delete.
+
+### Reviews by a fresh reader
+
+- **A fresh reader checks the brief before you approve it.** `/shilaycow-chief` has a reader that was not in your conversation say back what the brief asks for, list the words it does not explain, the scenarios that cannot be checked as written and what a builder would have to guess. You see its reply and decide whether the brief says what you mean; it reads at most twice.
+- **The verifier paraphrases before it judges.** Its verdict opens with what the work changes, in its own words, from the brief and the diff alone; a part of the diff it cannot account for is reported. The verifier also reports it when the message that started it describes the work, since it should see the work as you will.
+- **The spec is checked, not only written.** `shilaycow-spec` can check an area against the code as it is now: each scenario and rule holds, is contradicted, is unshown or is not behaviour at all, with the evidence. `/shilaycow-chief` runs it on the areas a task touches before the brief, and you decide for each item whether the spec or the code is wrong.
+
+### Loading only what a step needs
+
+- **Sessions start with a map.** The section `/shilaycow-setup` writes into `CLAUDE.md` now also says where each piece of state lives (the config, a task's branch and folder, its tracking issue, the spec and roadmap, the pitfalls, the labels) and which command to start from. It names places only, so it stays the same from task to task. Projects set up before: run `/shilaycow-setup` again to update the section.
+- **`/shilaycow-status` is the place to start when you are not sure.** Typed alone it says where things stand; typed with a job (`/shilaycow-status I want to understand the billing code`) it names the skills that fit, in order, and why each fits rather than its neighbour. It only points; you type the command. Only you can start it now: the model no longer calls it on its own.
+- **Each skill says when not to use it.** Every description now names the case it does not cover and the skill that does, so the model picks the right one from the descriptions alone.
+- `shilaycow-verify` is shorter: its checks, its verdict rules and its fix-round rules each live in a file beside it that it reads at the step that needs it. Nothing in what it checks has changed.
+- `shilaycow-autopilot` is shorter: its body keeps the gate, the boundary and the order of the run, and it reads how to start, how to work, how to hand work to others and how to finish from files beside it when it reaches each part. The rules themselves are unchanged.
+
+### Credits
+
+- The README credits the work these changes build on: the Elephant-Goldfish Model, Anthropic's and OpenAI's writing on agent harnesses, Manus and Cognition, besides pstack and Matt Pocock's skills.
+
+**Upgrading from 0.4.x:** run `/shilaycow-setup` again in each repository. It adds the hook, the verdict workflow and `.gitattributes` in a pull request; once you merge it, make the status `shilaycow/verdict` required in the ruleset, with GitHub Actions as its source (`by-hand.md` step 2). A task already running carries on: its tracking issue is found by its title and gains a `tracking-issue` row on the next resume. Update the `--branch` tag in your cloud environment's setup script.
+
 ## 0.4.3
 
 - **Setup asks less.** `/shilaycow-setup` finds the owner and the bot itself and only asks you to confirm them. It no longer asks for a test command: it takes one the repository already runs, or leaves it empty in a new project, and the first task that adds tests sets it.

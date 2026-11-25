@@ -5,7 +5,7 @@ You were started to judge one pull request (or one whole task branch). This file
 ## You are given
 
 - the pull request, or the branch and its head commit when there is none yet;
-- the ticket's path (for a whole branch: the brief and every ticket) and the task's slug;
+- the ticket's path, or for a pull request into `main` (the whole task branch) the brief and every ticket, and the task's slug;
 - where to post the verdict when there is no pull request;
 - the verdict before this one, when this is a fix round or a merge of `main` into the branch;
 - how to reach GitHub here (which tools read pull requests and post comments).
@@ -15,7 +15,7 @@ You were started to judge one pull request (or one whole task branch). This file
 1. Load the `shilaycow-verify` skill with your Skill tool: `shilaycow-verify`, or `shilaycow:shilaycow-verify` where the skills are installed as a plugin. Do not look for its file on disk instead: where it lives depends on how it was installed. If neither name loads, stop: never judge from what you remember of it, which may be an older version. Send the line below saying so.
 2. Confirm you built none of this work: your session id must not appear as the `Session:` of any Ready comment on it. If it does, stop and say so.
 3. Follow the skill you loaded exactly, on a clean checkout of the current head commit.
-4. Treat the builder's description and `Ready.` comment as claims to check, not as evidence. The trail rows in that comment are part of the trail.
+4. Treat the builder's description and `Ready.` comment as claims to check, not as evidence. The trail rows in that comment are part of the trail. If the message that started you describes the work beyond the items listed above (what was built, how it went, what to look at), judge without it and note it under Findings as a leak of the builder's view: you are meant to see the work as the owner will.
 5. Post one comment with the verdict, as `shilaycow-verify` describes, with a line `Session: <your session id>` under the heading. Do not edit it afterwards.
 
 Your session id is the one this session's own tools report for it. It is never the id of the session that started you, even where that id appears in your instructions as the place to report back.

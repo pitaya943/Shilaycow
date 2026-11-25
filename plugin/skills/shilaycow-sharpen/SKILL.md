@@ -1,6 +1,6 @@
 ---
 name: shilaycow-sharpen
-description: Use at the start of any task, and whenever a goal is vague, large or new, to say back what the user wants and turn it into a task brief of plain-language scenarios they approve.
+description: "Use when shilaycow-chief sharpens a brief with the user, or in manual mode to say back what they want and write a brief of plain-language scenarios they approve. Don't use to start a task in auto mode: use shilaycow-chief."
 ---
 
 # Sharpen

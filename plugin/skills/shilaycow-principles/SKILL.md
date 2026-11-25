@@ -1,6 +1,6 @@
 ---
 name: shilaycow-principles
-description: "Use when choosing between two designs, judging whether a change is the smallest that works, or reviewing someone's work: the handful of judgements a good engineer applies without being told."
+description: "Use when choosing between two designs, judging whether a change is the smallest that works, or reviewing code for whoever maintains it next. Don't use to decide how a behaviour is proven: use shilaycow-prove."
 ---
 
 # Principles

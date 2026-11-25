@@ -1,6 +1,6 @@
 ---
 name: shilaycow-setup
-description: Use once per repository to make GitHub itself keep agents out of main and to write the shilaycow config, or again at any time to check that the real settings still match. Works in a cloud session acting as the bot, where the owner does a few steps by hand, or in a local session with the owner's gh.
+description: "Use once per repository to put the boundary on GitHub (a bot account, a ruleset) and write the shilaycow config, or again to check the real settings still match. Don't use to start a task: use shilaycow-chief."
 ---
 
 # Setup
@@ -26,22 +26,23 @@ All of these hold, and you have shown the owner what you checked:
 2. A ruleset on the default branch requires a pull request with one approval, dismisses stale approvals on push, and blocks force pushes and deletion. The only bypass is the repository admin role, for pull requests only: the owner can merge their own pull request without a second approver, and nobody can push to the branch directly. `ruleset.json` beside this file is that ruleset.
 3. The repository setting **Automatically delete head branches** is on, so a branch goes once its pull request is merged. Where your GitHub tools do not show the setting, the owner confirms it.
 4. `.shilaycow/config.yml` exists with `owner`, `bot`, `mode: auto`, `test_command` (empty while the project has no tests), `fix_rounds`.
-5. `CLAUDE.md`, which sessions read when they start, has a section pointing at `.shilaycow/` and saying, as the owner's standing permission: agents may create and push `task/`, `work/`, `spike/` and `chore/` branches and the setup branch, never push to `main`, and only the owner merges it. Where the project keeps its rules in `AGENTS.md`, the section goes there and `CLAUDE.md` imports it with a line `@AGENTS.md`; `.gitignore` ignores `.shilaycow/worktrees/`, where builders work.
-6. Items 4 and 5 are on a branch with a pull request open, not pushed to `main`; the labels `needs-owner` and `later` exist on the repository. Read each with your GitHub tools; where they cannot create a label, the owner creates it by hand (`by-hand.md`).
-7. The owner has a cloud environment whose setup script is `install-skills.sh` beside this file, and knows to start this project's sessions in it. A repository's own plugin settings are not loaded in cloud sessions.
+5. `CLAUDE.md`, which sessions read when they start, has the section in `claude-section.md` beside this file, copied as it is: the owner's standing permission to push branches, and where each piece of state lives. It names places, never one task's details, so it stays the same from task to task. An existing section is updated to match. Where the project keeps its rules in `AGENTS.md`, the section goes there and `CLAUDE.md` imports it with a line `@AGENTS.md`; `.gitignore` ignores `.shilaycow/worktrees/`, where builders work.
+6. `.github/workflows/shilaycow-verdict.yml` is a copy of `workflows/shilaycow-verdict.yml` beside this file. It posts the status `shilaycow/verdict` on the head of each pull request the bot opens into the default branch: green only when the newest verdict naming that exact commit is a PASS, so a push after the verdict turns it red again. Once it is on the default branch, the ruleset requires that status from GitHub Actions (`by-hand.md` step 2), and GitHub refuses to merge a head nobody judged. `.gitattributes` has the line `docs/tasks/*/trail.tsv merge=union`, so trail rows that two sessions append at once both survive a merge instead of conflicting. `.claude/hooks/shilaycow-guard.py` is a copy of `hooks/shilaycow-guard.py` beside this file, and `.claude/settings.json` runs it as the `PreToolUse` hooks in `hooks/settings.json`. It blocks a push to the default branch and a merge, whoever the session acts as: the second lock, for a session the ruleset would let through. Where `.claude/settings.json` exists, add the two entries to its `PreToolUse` list and keep everything else.
+7. Items 4 to 6 are on a branch with a pull request open, not pushed to `main`; the labels `needs-owner` and `later` exist on the repository. Read each with your GitHub tools; where they cannot create a label, the owner creates it by hand (`by-hand.md`).
+8. The owner has a cloud environment whose setup script is `install-skills.sh` beside this file, and knows to start this project's sessions in it. A repository's own plugin settings are not loaded in cloud sessions.
 
 ## How
 
-**As the bot.** Walk the owner through items 1 to 3 and the labels one step at a time, from `by-hand.md` beside this file, and wait for them to say each is done. Meanwhile write items 4 and 5 and open the pull request. Then check, and say for each item whether you confirmed it or the owner must look:
+**As the bot.** Walk the owner through items 1 to 3 and the labels one step at a time, from `by-hand.md` beside this file, and wait for them to say each is done. Meanwhile write items 4 to 6 and open the pull request. Then check, and say for each item whether you confirmed it or the owner must look:
 
 - who you are, and that you can push a branch but hold no admin role;
 - the rules in force on the default branch. They can be read without admin rights (`GET /repos/<owner>/<repo>/rules/branches/<branch>`); compare them with `ruleset.json`. If you cannot reach that from here, say so and ask the owner to read the ruleset page to you.
 
 Never test the boundary by trying to push to `main`.
 
-**As the owner.** Do items 1 to 3 with `gh api`, sending `ruleset.json` as the body, then items 4 to 6, the labels included. The owner still does what only a person can: accepting the invitation as the bot, and connecting GitHub on claude.ai to the bot account with the Claude GitHub App installed on this repository.
+**As the owner.** Do items 1 to 3 with `gh api`, sending `ruleset.json` as the body, then items 4 to 7, the labels included. The owner still does what only a person can: accepting the invitation as the bot, and connecting GitHub on claude.ai to the bot account with the Claude GitHub App installed on this repository.
 
-Either way: say why at each step, and never overwrite a file that exists; add a section or report the difference. If the project has a test command, propose a workflow that runs it as a required check; the owner adds it, since it lives under `.github/`.
+Either way: say why at each step, and never overwrite a file that exists; add a section or report the difference. Once the project has a workflow that runs its test command on pull requests, the ruleset also requires that check to pass (`required_status_checks`, `by-hand.md` step 2), so a red suite cannot be merged whatever a verdict says; until then, passing tests rest on the verifier's run, and the setup check says so. Propose that workflow; the owner adds it, since it lives under `.github/`.
 
 To check an existing setup, compare each item with what GitHub reports and list actual against expected. Change nothing. A config written by version 0.3 has `merge_unit` in place of `mode`, and often a `budget`: that is the upgrade the CHANGELOG describes, so in the setup pull request put `mode: auto` in place of `merge_unit` and remove `budget`.
 

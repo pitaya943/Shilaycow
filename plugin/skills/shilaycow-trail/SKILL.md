@@ -1,6 +1,6 @@
 ---
 name: shilaycow-trail
-description: Use during a task in auto mode, or when the user asks for a decision log, to record each decision as it is made, so a reviewer who stepped away can trust the result without rebuilding the process.
+description: "Use during a task in auto mode, or when asked for a decision log, to record each decision as it is made, with its reason and evidence. Don't use for the end-of-task summary: use shilaycow-report."
 ---
 
 # Trail
@@ -21,7 +21,7 @@ Each row says what was decided, why in plain words, and where the evidence is: a
 
 Write the row when you decide, not at the end. Append only: to reverse a decision, add a row. Routine steps are not decisions; do not log them.
 
-A builder is given the header and posts its rows, in those columns, in its pull request's `Ready.` comment; the Chief adds them to the file when it merges that pull request into the task branch, fitting any that do not match.
+A builder is given the header and posts its rows, in those columns, in its pull request's `Ready.` comment; autopilot adds them to the file when it lands that pull request on the task branch, fitting any that do not match.
 
 ## Stop when
 

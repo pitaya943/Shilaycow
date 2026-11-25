@@ -21,7 +21,7 @@ This document explains the harness as a system: what it is made of, what it guar
 
 ## 1. The idea in one paragraph
 
-Give the agent as much freedom as possible, and protect only what a mistake could cost you. The protection lives on GitHub's servers, not in instructions the agent has to read and obey: the agent works as a bot account that simply has no permission to change `main`. Inside that boundary, quality is not bought by prescribing steps. It comes from checking results: an independent session that built none of the work tries it the way a user would, breaks each behaviour to see the tests fail, and reads the code as its future maintainer.
+Give the agent as much freedom as possible, and protect only what a mistake could cost you. The protection lives on GitHub's servers and in your repository, not in instructions the agent has to read and obey: the agent works as a bot account that simply has no permission to change `main`, GitHub refuses to merge a head no independent verifier passed, and a hook refuses the pushes that could lose work. Inside that boundary, quality is not bought by prescribing steps. It comes from checking results: an independent session that built none of the work tries it the way a user would, breaks each behaviour to see the tests fail, and reads the code as its future maintainer.
 
 Two kinds of rule follow from this, and every rule in the harness is one or the other:
 
@@ -48,19 +48,20 @@ Every action with a large blast radius (irreversible, external, or costly) gets 
 
 | Action | Why it is dangerous | Guard | Strength |
 |---|---|---|---|
-| Changing `main` | the one thing you cannot throw away | Ruleset: pull request required, one approval, no force push, no deletion. The bot opens the pull request, and GitHub does not let an author approve their own | Server side |
+| Changing `main` | the one thing you cannot throw away | Ruleset: pull request required, one approval, no force push, no deletion. The bot opens the pull request, and GitHub does not let an author approve their own. The hook also stops a push to `main` or a merge in a session acting as you | Server side, and a hook |
+| Merging a head nobody judged | a push after the verdict would reach you unchecked | the workflow `shilaycow-verdict` posts the status `shilaycow/verdict` on the head: green only when the newest verdict naming that exact commit is a PASS. The ruleset requires it from GitHub Actions, so a status the bot posts does not count, and the hook blocks posting one | Server side |
 | Changing settings, rulesets or collaborators | would remove the guard above | the bot has the Write role, not Admin | Server side |
-| Changing CI workflows | could disable required checks | the bot's credentials carry no workflow permission | Server side |
+| Changing CI workflows | could disable required checks | a workflow changed on a branch runs only once you merge it: the verdict check runs the copy on `main`, never a pull request's, and the change is in the diff you read | Server side |
 | Reading or leaking secrets | cannot be taken back | the cloud environment holds no secrets | Configuration |
 | External side effects (deploy, email, paid APIs) | cannot be taken back | the environment's network allows package registries and `github.com` only; no deploy credentials | Configuration |
 | Runaway spending | money and quota | the limits of your Claude plan or API account; a run also ends when a defect survives `fix_rounds` or you say stop | Your account |
-| Touching another session's branch | destroys someone else's work | each session pushes only its own branch; only the Chief merges into the task branch | Written rule |
+| Losing another session's work | two sessions on one task overwrite each other | every push to a `task/` or `work/` branch must be a compare-and-swap on the commit fetched, and a push to the task branch must contain it; a ticket is claimed by creating its branch, which only one session can do | Hook |
 
 **Deliberately not guarded:** files outside a ticket's scope, test configuration, commit authorship, destructive commands inside the container. All of these happen on a branch you can delete or in a container that is thrown away. If one of them keeps causing trouble in your project, it becomes that project's own guard (section 9).
 
-<p align="center"><img src="assets/diagrams/02-boundary.png" width="725" alt="The boundary. The agent, acting as the bot, pushes to a disposable task or work branch, which opens a pull request into main. An independent session posts a verdict, PASS or FAIL on one commit. You read, try and decide: merge into main, or send it back to the branch. The agent's own push to main is refused by the ruleset, and its attempt to change repository settings is refused because it has the Write role only."></p>
+<p align="center"><img src="assets/diagrams/02-boundary.png" width="725" alt="The boundary. The agent, acting as the bot, pushes to a disposable task or work branch with a compare-and-swap push, the only kind the hook allows, and the branch opens a pull request into main. An independent session posts a verdict, PASS or FAIL on one commit, and the status shilaycow/verdict is green only for a PASS on that exact head. You read, try and decide: merge into main once the status is green, or send it back to the branch. The agent's own push to main or merge is refused by the ruleset and the hook, and its attempt to change repository settings is refused because it has the Write role only."></p>
 
-The boundary holds without the agent reading a single word. That is why it is the only thing the harness insists on.
+The boundary holds without the agent reading a single word: the ruleset and the required status are on GitHub's servers, and the hook refuses a command whatever the agent has read, explaining how to do it instead. That is why it is the only thing the harness insists on.
 
 ---
 
@@ -97,7 +98,7 @@ What the branches look like, with two tickets:
 
 All roles act as the same bot account, so they are told apart by session: every `Ready.` and every verdict carries a `Session:` line, and the Chief rejects a `PASS` whose session matches the Chief's own or any builder's.
 
-<p align="center"><img src="assets/diagrams/04-roles.png" width="943" alt="Roles over time. You describe the task; the Chief says back what it understood and writes brief.md on the task branch. You approve it and type /shilaycow-autopilot, which runs a gate checking the config, that one task is open and the brief is the one you approved, and has the agent confirm with its own GitHub tools that it acts as the bot; only then does the run go on unattended. The Chief opens a tracking issue, then for each ticket gives a builder its role file and the ticket; the builder pushes a work branch, opens a pull request and posts Ready. When the ticket's risk is high, or the Chief judges it worth it, a verifier judges that pull request. The Chief merges each ticket into the task branch, then updates the spec, writes the final report and opens the pull request into main, which a verifier judges on its exact head commit. The Chief posts findings, Retro and Finished, and you merge or send it back."></p>
+<p align="center"><img src="assets/diagrams/04-roles.png" width="943" alt="Roles over time. You describe the task; the Chief says back what it understood and writes brief.md on the task branch. You approve it and type /shilaycow-autopilot, which runs a gate checking the config, that one task is open and the brief is the one you approved, and has the agent confirm with its own GitHub tools that it acts as the bot; only then does the run go on unattended. The Chief opens a tracking issue, named in the trail, then for each ticket claims it by creating its work branch and gives a builder its role file and the ticket; the builder pushes a work branch, opens a pull request and posts Ready. When the ticket's risk is high, or the Chief judges it worth it, a verifier judges that pull request. The Chief merges each ticket locally and pushes the task branch as a compare-and-swap, then updates the spec, writes the final report and opens the pull request into main, which a verifier judges on its exact head commit; the status shilaycow/verdict is green only for a PASS on that head. The Chief posts findings, Retro and Finished, and you merge or send it back."></p>
 
 The builder never starts its own verifier: whoever is being judged does not write the judge's instructions. Every session the Chief starts is closed once its work is done, including one that stopped or stopped answering; a run leaves no session or worktree behind.
 
@@ -128,7 +129,7 @@ Two exits apply from **any** unattended state, so they are not drawn as arrows:
 | Planning | the work is cut into tickets someone could pick up cold | `plan.md`, `tickets/T-nn.md` |
 | Building | tickets are being built, proven and merged into the task branch | `work/<slug>/T-nn` pull requests |
 | Finishing | `docs/spec/` is brought up to date, the final report is written | `docs/spec/`, `reports/final.md` |
-| Judging | an independent session is checking the exact head commit | verdict comment on the pull request |
+| Judging | an independent session is checking the exact head commit | verdict comment on the pull request, and the status `shilaycow/verdict` on that commit |
 | Fixing | one fix round fixes the whole class a FAIL names; at most `fix_rounds` (default 2) while a defect remains; once only gaps remain, the pull request goes to you with them listed | a new head commit |
 | Wrapping | everything after the verdict goes on GitHub, so the judged commit stays the one you merge | comments on the pull request and tracking issue |
 | AwaitingOwner | a pull request you can read, try and merge | the pull request |
@@ -174,7 +175,7 @@ Task 0 has nothing to run, so its verification is different: instead of tests an
 Rules that make the verdict trustworthy:
 
 - **Evidence is a command and its output, a screenshot, a file and line.** Never a sentence.
-- **One verdict per head commit.** A new commit needs a new verdict, and nothing is pushed after the verdict on the pull request you merge.
+- **One verdict per head commit.** A new commit needs a new verdict, and nothing is pushed after the verdict on the pull request you merge. This one is enforced: the required status `shilaycow/verdict` turns red on any head without a PASS, so GitHub refuses to merge it.
 - **A finding never turns a PASS into a FAIL, and is never left out to keep a PASS clean.**
 - **Every failed item is a defect or a gap.** A gap means users can already do what the scenario says and the verifier saw it work; only the proof or the documents around it fall short. At high risk every failed item is a defect. Gaps still fail the verdict, but they do not keep the run fixing: once only gaps remain, the pull request comes to you with them listed, each with an issue for a later task.
 - **A FAIL names the class, not one instance.** For each failed item the verifier says where else it searched for the same kind of mistake, so a fix round fixes all of it instead of the one place that was seen.
@@ -219,9 +220,14 @@ The loop runs at the start of the next task, not at the end of this one, so that
 .shilaycow/
   config.yml            settings (below)
   pitfalls.md           mistakes this project has made, with their sources; builders read it first
-  worktrees/            where builders work; ignored by git
-.claude/skills/
-  try-<app>/            how to start and drive your app, made by shilaycow-try-it
+  worktrees/<session>/  where builders work, a folder per session; ignored by git
+.claude/
+  hooks/shilaycow-guard.py   the hook that stops a push to main, a merge, and any push to a task's branches that is not a compare-and-swap
+  settings.json         runs the hook before every command and GitHub tool call
+  skills/try-<app>/     how to start and drive your app, made by shilaycow-try-it
+.github/workflows/
+  shilaycow-verdict.yml posts the status the ruleset requires: PASS for this exact head, or red
+.gitattributes          trail.tsv merges by union, so rows two sessions append both survive
 docs/spec/
   index.md              what the system is, its areas, its terms, what it does not do
   <area>.md             the scenarios and rules true in that area today
@@ -234,7 +240,7 @@ docs/tasks/<slug>/
   trail.tsv             every decision made in place of asking
   evidence/             recordings and outputs
   reports/final.md      final report; the pull request into main links to it
-AGENTS.md               gains a section pointing at .shilaycow/ and the branch names
+CLAUDE.md               gains a short map: the standing permission to push branches, and where each piece of state lives
 ```
 
 Only two files have a fixed shape, because you read them: `brief.md` (what you approve) and the final report (what you read before merging). Everything else is "usually here, usually like this".
@@ -250,7 +256,7 @@ Only two files have a fixed shape, because you read them: `brief.md` (what you a
 | `brief.md` | `shilaycow-sharpen` | design, plan, verify, report |
 | `design.md` | `shilaycow-design` | plan, builders, verify |
 | `plan.md`, `tickets/` | `shilaycow-plan` | the Chief, builders, verify |
-| `trail.tsv` | the Chief, builders | report, verify, retro, you |
+| `trail.tsv` | the Chief; builders' rows come in their `Ready.` comments and the Chief adds them when a ticket lands | report, verify, retro, you |
 | `reports/` | `shilaycow-report` | you |
 
 **Branches**
@@ -284,12 +290,14 @@ Nothing important lives in a conversation. Conversations are compressed and sess
 | State | Lives in |
 |---|---|
 | What was agreed | `brief.md`, `design.md` on the task branch |
-| Progress | the tracking issue `Task: <slug>`: its first line, then one line each time something lands or waits |
+| Progress | the tracking issue `Task: <slug>`, which the trail's `tracking-issue` row names: its goal list comment (marked `<!-- shilaycow:goal-list -->`) holds the goal, what is left and what it waits on; the other comments are one line per event |
 | Decisions made without asking | `trail.tsv` |
 | Readiness and verdicts | `Ready.` and `Verification:` comments on pull requests, each tied to a head commit and a `Session:` |
 | Questions for you | issues labelled `needs-owner` |
 
-Because of this, running `/shilaycow-autopilot` again on the same task resumes it, after the same gate: the Chief rebuilds its picture from the repository and GitHub every time. `shilaycow-status` reads the same sources to tell you, without changing anything, what the task is waiting on and what to do next.
+Because of this, running `/shilaycow-autopilot` again on the same task resumes it, after the same gate: the Chief rebuilds its picture from the repository and GitHub every time.
+
+**Two runs at once lose nothing.** There is no lock that could be left held. Instead, every write that could lose work is one only a single writer can win: pushes to the task's branches are compare-and-swaps the hook enforces, two first starts race on the same push and the loser stops, a ticket is claimed by creating its branch, the tracking issue is the one the trail names, and GitHub allows one open pull request per branch. A second run only duplicates effort, such as a second verifier. `shilaycow-status` reads the same sources to tell you, without changing anything, what the task is waiting on and what to do next.
 
 ---
 
@@ -302,7 +310,10 @@ Because of this, running `/shilaycow-autopilot` again on the same task resumes i
 | Permission prompts are turned off in manual mode | same as above | documented; cannot be detected |
 | The project gains production, real users or secrets | the boundary table is no longer enough | out of scope; `shilaycow-setup` warns when it sees deploy configuration or secrets |
 | Builder and verifier are the same model on the same account | verification catches honest mistakes only | accepted: the agent is assumed to cooperate and err, not to cheat; you are the final gate |
-| Parallel builders edit the same file | merge conflicts | the Chief runs in parallel only tickets whose areas do not overlap |
+| Parallel builders edit the same file | merge conflicts | the Chief runs in parallel only tickets whose areas do not overlap; a conflict when a ticket lands shows they were not independent, and it is resolved on the ticket's branch |
+| Two sessions run the same task | duplicated work | every push that could lose work is a compare-and-swap (section 11); the cost is effort, not correctness |
+| A commit is pushed after the verdict | you would merge an unjudged head | the required status turns red; GitHub refuses the merge unless you bypass it as admin |
+| A push is made outside Claude (your own terminal) | the hook does not see it | the ruleset still protects `main`; a forced push to a task branch changes approval rows' hashes, so the gate closes and the run stops instead of going on |
 | `main` changes during a task | the final pull request conflicts | the Chief merges `main` into the task branch; the conflict happens on a branch you can throw away |
 | Tests are written to match the code instead of the scenario | wrong behaviour is locked in as correct | expected values must come from scenarios; the verifier breaks each behaviour; repeats become a grown guard |
 | Too much process for a small task | the process constrains the model | depth scales with the task; the Chief says what it skipped |

@@ -1,6 +1,6 @@
 ---
 name: shilaycow-how
-description: Use for "how does X work", before changing an unfamiliar area, or to decide where new code should live. For why something is the way it is, use why.
+description: "Use for 'how does X work', before changing an unfamiliar area, or to decide where new code belongs. Don't use for why something is the way it is: use shilaycow-why."
 ---
 
 # How

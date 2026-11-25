@@ -1,6 +1,6 @@
 ---
 name: shilaycow-retro
-description: Use when a task finishes, after the final verdict on its pull request, to record the pitfalls it hit so the next task does not repeat them; also says how the next task folds them into the pitfalls file.
+description: "Use when a task finishes, after the final verdict, to record the pitfalls it hit and how the next task folds them in. Don't use once the same class of mistake has happened twice: use shilaycow-correct."
 ---
 
 # Retro
@@ -15,7 +15,7 @@ What the owner found wrong after merging earlier tasks (their comments on closed
 
 You have worked out what `.shilaycow/pitfalls.md` should say after this task:
 
-- each new pitfall has four lines: what happened (with a pull request or commit), how to avoid it, how many times it has happened, and `Sources:`, the tracking issues it came from;
+- each new pitfall has four lines: what happened (with a pull request or commit), how to avoid it, how many times it has happened, and `Sources:`, the links of the comments it came from (a `Retro:` comment, an owner comment);
 - a pitfall of a class already listed raises that entry's count and adds its source instead of adding an entry; so does a class of gap that `later` issues from two tasks share;
 - every entry kept passes three tests: it will still hold in six months, it would change what the next agent does, and it is not a one-off detail such as a version, a hash or a count;
 - an entry may carry `Correct: none possible at count <n> (<link>)` from `shilaycow-correct`; keep it, and when the count rises past `<n>` say so, since the entry is due again;
@@ -23,7 +23,7 @@ You have worked out what `.shilaycow/pitfalls.md` should say after this task:
 
 And you have said which entries now have a count of 2 or more: those are for `shilaycow-correct`.
 
-Run this after the final verdict, since the verdict's findings are part of what you read. The branch is frozen by then, so post the result as a `Retro:` comment on the tracking issue. The next task's `/shilaycow-chief` folds it into the file, on its own branch, only if the file on the default branch does not already cite this tracking issue as a source; that check is what keeps a comment from being counted twice.
+Run this after the final verdict, since the verdict's findings are part of what you read. The branch is frozen by then, so post the result as a `Retro:` comment on the tracking issue. The next task's `/shilaycow-chief` folds it into the file, on its own branch, taking only the comments whose links the file on the default branch does not already cite; citing comments, not issues, is what keeps a comment from being counted twice and lets an owner comment that arrives later still be folded.
 
 ## How
 

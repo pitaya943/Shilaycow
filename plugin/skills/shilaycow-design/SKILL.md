@@ -1,6 +1,6 @@
 ---
 name: shilaycow-design
-description: Use after a task brief is approved and before planning or coding anything non-trivial, to derive the system's shape from the scenarios. Also the whole deliverable of a spec-only task.
+description: "Use after a brief is approved, when its scenarios leave the system's shape open: derives components, data and boundaries from them; also the deliverable of a spec-only task. Don't use to cut work into tickets: use shilaycow-plan."
 ---
 
 # Design

@@ -1,6 +1,6 @@
 ---
 name: shilaycow-blast-radius
-description: Use before a change to shared code ships, and before a task branch goes to main, to find what it could break elsewhere and prove the facts its safety rests on by running code. Also sets a ticket's risk level, which decides how closely it is verified.
+description: "Use before shared code ships or a task branch goes to main: finds what the change could break elsewhere, proves the facts its safety rests on, and sets each ticket's risk level. Don't use to decide whether a pull request is ready to merge: use shilaycow-verify."
 ---
 
 # Blast radius

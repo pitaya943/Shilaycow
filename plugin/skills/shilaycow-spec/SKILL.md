@@ -1,6 +1,6 @@
 ---
 name: shilaycow-spec
-description: "Use to keep docs/spec/ true: the living description, by area, of what the whole system does now. Use when a task starts (to read the areas it touches), before a task's pull request (to fold its scenarios in), or to build one for a project that has none."
+description: "Use to read docs/spec/ when a task starts, to check an area against the code for drift, to fold a task's scenarios in before its pull request, or to build a spec for a project with none. Don't use to write one task's brief: use shilaycow-chief, or shilaycow-sharpen in manual mode."
 ---
 
 # Spec
@@ -31,7 +31,7 @@ And when a task has been folded in:
 - scenarios it removed are gone;
 - the brief's assumptions that were built are under Rules;
 - nothing left in the spec is made false by the work;
-- in a chain, the task's line in the roadmap names its pull request, and the tasks after it are re-cut if this one showed the order was wrong.
+- in a chain, the task's line in the roadmap names its pull request, once that pull request is open; if this task showed the later tasks are in the wrong order, that is a question for the owner, who approved the roadmap, not a change to make.
 
 The spec changes in the same pull request as the code, so the two are judged and merged together.
 
@@ -42,6 +42,10 @@ Write in the present tense, with these headings in English. Scenarios holds only
 Let the tree grow only when it has to. A small system is one area file. When an area grows past what a reader can hold at once (about 150 lines is a fair sign), make it a folder, `<area>/index.md` with a file for each part, and keep the links in the index working.
 
 To build a first spec for a project that has none, write what you can show: read the tests, run the product (`shilaycow-how`, `try-<app>`), and mark anything you inferred and could not run as unverified. Write in English.
+
+## Drift
+
+A spec that is wrong misleads every task that starts from it, so it is checked as well as written. To check one or more areas against the code as it is now, read `references/drift.md` and follow it. The check changes nothing; the owner decides, item by item, whether the spec or the code is wrong.
 
 ## Stop when
 
