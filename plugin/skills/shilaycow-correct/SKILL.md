@@ -7,7 +7,7 @@ description: Use when the same class of mistake has happened twice in a project,
 
 A mistake that recurs is the repository's fault, not the agent's. Change the repository so the next agent cannot make it.
 
-Assume every contributor is an agent that sees only the files it opened, copies the nearest example and takes the shortest path that works. Design so that a change that looks right from one file is right for the whole.
+Write the fix for the next contributor at their least careful: an agent with a narrow view of the code, which imitates what is nearby and stops at the first thing that passes. If what is nearby is right, and the wrong thing fails before review, that contributor gets it right without knowing why.
 
 ## Inputs
 

@@ -1,5 +1,21 @@
 # Changelog
 
+## 0.4.3
+
+- **Setup asks less.** `/shilaycow-setup` finds the owner and the bot itself and only asks you to confirm them. It no longer asks for a test command: it takes one the repository already runs, or leaves it empty in a new project, and the first task that adds tests sets it.
+- Setup now asks you to create the `needs-owner` and `later` labels by hand, since a session's GitHub tools cannot create labels. Once you merge the setup pull request, it tells you to start your first task with `/shilaycow-chief`.
+- **You always know what comes next.** In a chain of tasks, the final pull request and the `Finished:` comment name the roadmap's next task; `/shilaycow-chief` typed with no request proposes it; `/shilaycow-status` lists the roadmap as done, next and remaining.
+- **The approved brief stays as approved.** A brief has no status line, since approval lives in the trail, and the verifier fails a pull request whose brief differs from the one you last approved.
+- Commits are authored as the bot, not as the session's default identity. Files on a `spike/` branch that the trail cites are copied into the task folder before the branch is deleted. The trail's "who" column uses a fixed set of names, and tickets kept as a table in `plan.md` carry Status and Risk columns.
+- `/shilaycow-autopilot` names the skills it usually reaches for (design, plan, prove, try-it, blast radius, spec, report, retro), so a run started straight after the brief still designs and plans where the task needs it. Skipping one is recorded in the trail.
+- **A scenario this environment cannot run is raised before it is built.** The run first tries to make it runnable; if it still cannot, it opens a `needs-owner` issue with options instead of planning the scenario as a gap.
+- **Cheaper rounds.** Builders no longer run mutation sweeps, which are the verifier's check on high-risk tickets, and only short evidence is committed: long transcripts go in a collapsed block of a comment, since the task branch is merged into `main`.
+- `fix_rounds` limits each ticket judged on its own and, separately, the pull request into `main`; a fix that lands as a high-risk ticket is judged on its own too. A mistake of the same class found twice within one task becomes a pitfall and gets a guard straight away, and a correction you defer becomes a `later` issue.
+- A roadmap is approved like a brief, with a `roadmap-approved` row, and a project with no `docs/spec/` gets one in the first task of the chain, before anything is built.
+- **The cloud setup script installs one version.** It pins the release it ships with and removes skills an earlier version left before copying. Update the script in your environment from the README.
+- `/shilaycow-autopilot` says where `gate.py` is (the skill's own directory, which for a plugin install is the plugin cache). Tickets that change the same files are built one after the other. Several skill descriptions are narrower, so they load when they apply rather than on every turn.
+- The README says plainly that the toolkit is for Claude Code only, and credits the projects whose ideas several skills build on.
+
 ## 0.4.2
 
 - **Branch permission is set once.** `/shilaycow-setup` writes into your repository's `CLAUDE.md` that agents may push `task/`, `work/`, `spike/` and `chore/` branches and never `main`, so you no longer grant it at the start of each session. Projects set up before: run `/shilaycow-setup` again to add it.

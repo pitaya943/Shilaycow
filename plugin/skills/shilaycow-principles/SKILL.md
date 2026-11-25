@@ -1,6 +1,6 @@
 ---
 name: shilaycow-principles
-description: "Use when writing code, choosing between two ways to do something, or reviewing someone's work: the handful of judgements a good engineer applies without being told."
+description: "Use when choosing between two designs, judging whether a change is the smallest that works, or reviewing someone's work: the handful of judgements a good engineer applies without being told."
 ---
 
 # Principles

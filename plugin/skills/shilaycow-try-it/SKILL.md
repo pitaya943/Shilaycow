@@ -18,7 +18,7 @@ The repository. Ask the user only what the repository cannot tell you.
 - **Surface**: what a user touches (web UI, CLI, API, desktop app), the primary one first.
 - **Run**: the exact commands to start it locally, with ports, environment and seed data.
 - **Drive**: how to act on it from a script, preferring what the project already has (end-to-end specs, a debug port, plain HTTP) over a new harness.
-- **Observe**: what evidence to capture (screenshots, transcripts, responses), kept under `docs/tasks/<slug>/evidence/`.
+- **Observe**: what evidence to capture (screenshots, transcripts, responses). What is committed under `docs/tasks/<slug>/evidence/` is short: the command, the commit, the result and the lines that show it, since the task branch is merged into `main`; long transcripts go in a collapsed block of a comment, or are not kept.
 
 Name each action by what the user does ("create a todo"), not by a task's scenario number: the next task numbers its scenarios from one again.
 - **Known limits**: what cannot be driven and must be checked by a person.

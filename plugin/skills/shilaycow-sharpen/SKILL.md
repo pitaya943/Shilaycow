@@ -24,6 +24,8 @@ Then `docs/tasks/<slug>/brief.md` exists with these headings filled in:
 - **Critical areas**: the parts of the system where any change is high risk whatever its size (money, permissions, the data model, ...), named as the user would or by path. The user's call; write None if there are none.
 - **Assumptions**: what the scenarios leave open that a user will still run into, each with the default you chose. Think of limits (how long, how large, how many), empty and repeated input, several people at once, how long data is kept. Do not ask about each; decide, and lay the decisions out where the user will see them when approving.
 
+The brief holds its title and these headings, nothing else: no status line, no approval note. Approval lives in the trail (`brief-approved <commit>`), and a brief that says it was approved has been changed since it was approved.
+
 And for every scenario you can name a test that would fail today (or, for one that keeps behaviour unchanged, a test that fails when that behaviour is broken), or a manual step that would show it. No scenario promises more than such a check can show: instead of "all", "any" or "wherever" for what a check covers, say what it looks at.
 
 ## How
@@ -37,7 +39,7 @@ And for every scenario you can name a test that would fail today (or, for one th
 ## Stop when
 
 - The user says it is enough. Write what is still unknown under the scenario it affects, as an assumption.
-- The idea is several tasks: more than one pull request a person could review closely. Say so, propose the chain as `docs/spec/roadmap.md` (`shilaycow-spec`), and sharpen only the first. Order it so that what is hardest to change later comes first, nothing comes before what it depends on, and every task after the first leaves something a user can try. For a large system the first task's deliverable is the specification itself: documents only, its scenarios under Not yet built.
+- The idea is several tasks: more than one pull request a person could review closely. Say so, propose the chain as `docs/spec/roadmap.md` (`shilaycow-spec`), and sharpen only the first. Order it so that what is hardest to change later comes first, nothing comes before what it depends on, and every task after the first leaves something a user can try. For a large system the first task's deliverable is the specification itself: documents only, its scenarios under Not yet built. When the user would rather the first task also build something, it still writes the spec and the roadmap first, and records that choice in the trail.
 
 ## Outputs
 

@@ -17,7 +17,7 @@ If any of these is missing, ask for it before starting. Check out your branch fi
 
 1. Read `shilaycow-principles`, then your ticket, `docs/tasks/<slug>/brief.md`, `design.md` if it exists, the areas of `docs/spec/` your ticket touches, and `.shilaycow/pitfalls.md` if it exists.
 2. If your branch already has commits, continue from them. How you build is yours to judge.
-3. Build each behaviour and prove it the way the `shilaycow-prove` skill says. Every test you add must have been seen to fail.
+3. Build each behaviour and prove it the way the `shilaycow-prove` skill says. Every test you add must have been seen to fail. Do not run mutation sweeps: breaking every behaviour is the verifier's job. Commit only short evidence (the command, the commit, the result); put long output in a collapsed block of your `Ready.` comment.
 4. Note each decision another person might have made differently, as rows in the form the `shilaycow-trail` skill describes. Do not edit `trail.tsv` yourself.
 5. When the full suite passes, set the ticket's `Status:` to `done` and open a pull request into your base branch.
 6. Post one comment on the pull request that starts `Ready.` and contains: the `Session:` line you were given, for each scenario how it is proven (the test and how it was seen to fail, or the driven check and its record), how to try the change, and your trail rows in a fenced block.

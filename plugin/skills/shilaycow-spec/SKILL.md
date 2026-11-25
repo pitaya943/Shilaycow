@@ -1,6 +1,6 @@
 ---
 name: shilaycow-spec
-description: "Use to keep docs/spec/ true: the living description, by area, of what the whole system does now. Read it before changing anything, fold a task's scenarios into it before the task's pull request, or build it for a project that has none."
+description: "Use to keep docs/spec/ true: the living description, by area, of what the whole system does now. Use when a task starts (to read the areas it touches), before a task's pull request (to fold its scenarios in), or to build one for a project that has none."
 ---
 
 # Spec
@@ -23,7 +23,7 @@ An area is a part of the system as its users would name it (accounts, billing, s
 - the tasks that last changed the area;
 - **Not yet built**, only while a larger plan is agreed and not finished: scenarios the owner approved that are not built yet. The task that builds one moves it up to Scenarios.
 
-While work is a chain of tasks, `docs/spec/roadmap.md` lists them in order, each with its slug, one line on what a user can do once it is merged, the Not yet built scenarios it will build, and its pull request once there is one. Every Not yet built scenario belongs to exactly one task in it. The index links to it.
+While work is a chain of tasks, `docs/spec/roadmap.md` lists them in order, each with its slug, one line on what a user can do once it is merged, the Not yet built scenarios it will build, and its pull request once there is one. Every Not yet built scenario belongs to exactly one task in it. A later task whose scenarios are not agreed yet says so on its line instead, and its own brief adds them; then no area needs a Not yet built section for it. The owner approves the roadmap as they approve a brief: a `roadmap-approved <commit>` row in the trail. The index links to it.
 
 And when a task has been folded in:
 

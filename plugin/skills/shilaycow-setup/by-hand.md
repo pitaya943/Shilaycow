@@ -37,6 +37,13 @@ Why: after this, the only way into the default branch is a pull request. The bot
 
 Why: every task and ticket works on its own branch, merged by a pull request. With this on, each one goes as soon as it is merged, and only open work is left.
 
-## After all three
+## 4. Create two labels
+
+1. In the repository open **Issues**, then **Labels**, then **New label**.
+2. Create `needs-owner` (for a decision only the owner can make), then `later` (for a gap or finding left for a later task).
+
+Why: a run files issues under these labels, and the session's GitHub tools can label an issue but cannot create a label. Skip this step if the session says it created them.
+
+## After all four
 
 Tell the session they are done. It reads the rules in force and compares them with `ruleset.json`, setting by setting.

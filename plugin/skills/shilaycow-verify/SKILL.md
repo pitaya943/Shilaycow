@@ -26,6 +26,8 @@ How deep you go follows risk (`shilaycow-blast-radius`). Before you start, set e
 
 For a pull request into `main` that changes the system's code, also run `shilaycow-blast-radius` against `main`.
 
+For a pull request into `main`, compare `brief.md` at the head with the commit of the trail's last `brief-approved` row. Any difference, a status line or layout included, is a defect unless the owner approved it in a comment on the tracking issue and a newer `brief-approved` row names it.
+
 A task whose deliverable is documents only (a specification, a design, a roadmap) has nothing to run: say that checks 1, 3 and 4 do not apply. Check instead, with a file and line for each, that its scenarios are under Not yet built and none was added under Scenarios, that each matches the brief, that none contradicts a scenario already under Scenarios, that the design gives every scenario a place, and that the roadmap gives every Not yet built scenario exactly one task.
 
 Then one comment is posted that starts `## Verification: PASS` or `## Verification: FAIL`, names the full head commit, and lists the checks with their evidence. With no pull request yet, post it on the tracking issue.

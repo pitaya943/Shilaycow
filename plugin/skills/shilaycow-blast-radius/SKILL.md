@@ -13,15 +13,15 @@ A diff: a pull request, or a task branch against `main`.
 
 ## Done when
 
-You have named the facts this change is safe because of, and for each one said how far down this ladder you got and why you stopped there:
+You have named the facts this change is safe because of, and for each one recorded what backs it. From weakest to strongest:
 
-1. You said so. Worth nothing alone.
-2. You pointed at the line, or at the library's own source.
-3. You walked the failure step by step and it cannot be reached.
-4. You ran it: a small script or test that calls the real code and fails loudly if you are wrong.
-5. You reproduced it in the running app.
+- **Belief**: it seems true. Not evidence on its own.
+- **Citation**: a file and line, here or in the dependency's source, that says so.
+- **Argument**: the path to the failure traced through the code, with the step that blocks it.
+- **Execution**: a script or test that calls the real code and would fail if the fact were false.
+- **Observation**: the fact seen to hold in the running app.
 
-Every fact reached step 3, 4 or 5, or says what made that impossible.
+Every fact is backed by an argument, an execution or an observation, or says why none was possible.
 
 ## How
 

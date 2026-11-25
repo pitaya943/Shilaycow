@@ -17,7 +17,7 @@ Your reply gives, in this order:
 
 1. **Waiting on**: the one thing blocking progress and who holds it (a pull request for the owner to merge, a `needs-owner` issue to answer, a session at work, nothing).
 2. **Where the task is**: the phase, tickets done out of total, in a chain of tasks which task of the roadmap this is, and how many `later` issues are open.
-3. **Next**: one step, with the command to type. A brief with a `brief-approved` row and no `autopilot-start` row after it is waiting for `/shilaycow-autopilot`; one without a `brief-approved` row is waiting for the user to approve it with `/shilaycow-chief`.
+3. **Next**: one step, with the command to type. A brief with a `brief-approved` row and no `autopilot-start` row after it is waiting for `/shilaycow-autopilot`; one without a `brief-approved` row is waiting for the user to approve it with `/shilaycow-chief`. With no task open and a roadmap, list its tasks in order as done (with their pull requests), next and remaining, and give `/shilaycow-chief` to start the next one; with no roadmap, say nothing is open and the next task is the user's to name.
 
 With no config, or `mode: manual`, say the project is in manual mode, name the skills that can be used directly, and say that `shilaycow-setup` turns on auto mode.
 

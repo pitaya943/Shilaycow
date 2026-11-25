@@ -22,7 +22,9 @@ The user's request. `.shilaycow/config.yml` on the default branch. `docs/spec/`,
 
 Read `mode` in the config.
 
-Create `task/<slug>` when the task begins, with `docs/tasks/<slug>/trail.tsv` and its header row (`shilaycow-trail`), and keep everything about the task in `docs/tasks/<slug>/` on that branch, the brief included, from the first file you write; record each decision in the trail as you make it, the ones before approval included, so nothing depends on this conversation surviving. Every task becomes one pull request into `main` from that branch; work too large for one pull request a person can review closely becomes a chain of tasks (`shilaycow-sharpen`).
+Typed with no request, the command asks what comes next: say where the roadmap stands (done, next, remaining) and propose its next task; with no roadmap, ask what the user wants built. A task that is still open comes first, as below.
+
+In auto mode, commit as the bot: before your first commit, set git's `user.name` to the bot's login and `user.email` to `<id>+<login>@users.noreply.github.com`, from `get_me`; if `get_me` names someone other than the config's `bot`, say so before writing anything. Create `task/<slug>` when the task begins, with `docs/tasks/<slug>/trail.tsv` and its header row (`shilaycow-trail`), and keep everything about the task in `docs/tasks/<slug>/` on that branch, the brief included, from the first file you write; record each decision in the trail as you make it, the ones before approval included, so nothing depends on this conversation surviving. Every task becomes one pull request into `main` from that branch; work too large for one pull request a person can review closely becomes a chain of tasks (`shilaycow-sharpen`).
 
 Before the brief, bring in what earlier tasks left, so the user weighs it while approving:
 
@@ -31,6 +33,8 @@ Before the brief, bring in what earlier tasks left, so the user weighs it while 
 - List the open `later` issues in the areas this task touches and offer to fold them in. When many are open, or they share a cause, suggest a task of their own instead. The user decides either way.
 
 Sharpen the brief with the user (`shilaycow-sharpen`), and design together if they want to (`shilaycow-design`). Answer their questions and discuss as long as they like: nothing you do here dispatches a builder or a verifier. When they say "start", "go" or anything like it, do not start; give them the command.
+
+When the task begins a chain (`shilaycow-sharpen`), the roadmap is approved like the brief: the user says it is right, you push it and add the trail row `roadmap-approved <commit>` for the commit that last changed `docs/spec/roadmap.md`. A project with no `docs/spec/` gets one in the first task of the chain, before anything is built (`shilaycow-spec`): the roadmap's Not yet built scenarios need an area to live in.
 
 When the user approves the brief as it stands, push it, then add the trail row `brief-approved <commit>` for the commit that last changed `brief.md`, and push that. Approval means the user said the brief is right; it is not the same as wanting to start, and when you cannot tell, ask. Change nothing in the brief after that row, not even its layout: any change needs the user's approval again and a new row, and the gate refuses a brief changed since its last approval.
 

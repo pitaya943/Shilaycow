@@ -1,6 +1,6 @@
 # shilaycow
 
-Skills for Claude Code that take a task from a vague idea to a pull request you can trust, while a server-side boundary keeps the agent out of `main`.
+Skills for Claude Code that take a task from a vague idea to a pull request you can trust, while a server-side boundary keeps the agent out of `main`. Built for Claude Code only, locally or in its cloud sessions; other hosts are not supported.
 
 <p align="center">
   <img src="assets/task-flow.webp" alt="How a task flows through shilaycow. With you: /shilaycow-chief says back what you asked and writes a brief, designing together is optional, then you type /shilaycow-autopilot and a gate checks setup and brief before handing over. Once the gate holds, unattended, the agent acting as a bot: planning tickets with a risk level each, building, finishing, judging, and fixing on FAIL until a new head gets a new verdict. PASS, then your call on GitHub: ready for you, you merge, merged; or you send it back. Underneath: the bot has Write only and a ruleset protects main, so only you can merge.">
@@ -52,19 +52,20 @@ Paste this into the environment's **Setup script**. Its network must reach `gith
 
 ```bash
 rm -rf /tmp/shilaycow-src
-git clone -q --depth 1 https://github.com/pitaya943/shilaycow.git /tmp/shilaycow-src \
+git -c advice.detachedHead=false clone -q --depth 1 --branch v0.4.3 https://github.com/pitaya943/shilaycow.git /tmp/shilaycow-src \
   && mkdir -p "${HOME:-/root}/.claude/skills" \
+  && rm -rf "${HOME:-/root}"/.claude/skills/shilaycow-* \
   && cp -r /tmp/shilaycow-src/plugin/skills/. "${HOME:-/root}/.claude/skills/" \
-  || echo "shilaycow skills were not installed"
+  || echo "shilaycow skills were not installed" >&2
 ```
 
-Every session started in that environment has the skills as `/shilaycow-chief`, `/shilaycow-sharpen`, and so on. Where this README names a command, a plugin install spells it `/shilaycow:shilaycow-…`. A plugin installed on your own computer is not available in cloud sessions, so use the script there. To stay on one version, add `--branch v0.4.2` to the `git clone`.
+Every session started in that environment has the skills as `/shilaycow-chief`, `/shilaycow-sharpen`, and so on. Where this README names a command, a plugin install spells it `/shilaycow:shilaycow-…`. A plugin installed on your own computer is not available in cloud sessions, so use the script there. The script installs version 0.4.3 and removes the skills an earlier version left; to move to a later version, change the `--branch` tag. It does not stop the session from starting if the clone fails, so a session without the skills still opens and says the command is unknown.
 
 **Upgrading from 0.3.x:** version 0.4 is not compatible. Follow the steps in [CHANGELOG.md](CHANGELOG.md) before your next task.
 
 ## Get started
 
-1. **Once per repository**, if you want the agent to work unattended (auto mode): run `/shilaycow-setup`. Without it every skill still works in manual mode, where you call each one yourself. It walks you through the three steps only you can do on github.com (invite a bot account as a Write collaborator, import the ruleset that protects `main`, turn on automatic deletion of merged branches), writes `.shilaycow/config.yml`, and opens a pull request for you to merge.
+1. **Once per repository**, if you want the agent to work unattended (auto mode): run `/shilaycow-setup`. Without it every skill still works in manual mode, where you call each one yourself. It walks you through the steps only you can do on github.com (invite a bot account as a Write collaborator, import the ruleset that protects `main`, turn on automatic deletion of merged branches, create the `needs-owner` and `later` labels), writes `.shilaycow/config.yml`, and opens a pull request for you to merge. Once you merge it, it tells you to start your first task with `/shilaycow-chief`.
 2. **For every task**, start with `/shilaycow-chief` and describe what you want. Discuss as long as you like; it writes the brief on the task's branch.
 3. **When you approve the brief**, type `/shilaycow-autopilot`. It runs a gate first (auto mode is on, the brief is the version you approved, no other task is open; anything off in the brief's shape is a warning, not a stop), and the agent confirms with its own GitHub tools that it acts as the bot. Nothing starts unless every check holds; if one fails, it tells you what to fix. Nothing else starts the unattended part, whatever you type to the Chief.
 
@@ -134,7 +135,7 @@ The rest are for when you want one practice on its own:
 
 ## Credits
 
-Everything here is written from scratch; no text is copied from other projects. Some ideas come from [pstack](https://github.com/cursor/plugins/tree/main/pstack) (MIT) and [Matt Pocock's skills](https://github.com/mattpocock/skills) (MIT).
+Several skills build on ideas from [pstack](https://github.com/cursor/plugins/tree/main/pstack) (MIT) and [Matt Pocock's skills](https://github.com/mattpocock/skills) (MIT): among them the names and the questions behind `correct`, `blast-radius`, `how`, `why` and `sharpen`, and the ladder of evidence in `blast-radius`. The text is our own.
 
 ## License
 
