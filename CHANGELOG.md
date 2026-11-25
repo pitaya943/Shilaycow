@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.5.1
+
+Fixes from running 0.5.0 end to end on a real repository.
+
+- **Setup no longer commits Python's cache.** Its `.gitignore` also ignores `__pycache__/`, and it adds its files to the commit by path.
+- **Making the verdict check required works the first time.** GitHub lists a check only after it has run, so `by-hand.md` now has you open a one-line pull request first, wait for the red `shilaycow/verdict`, close it, and then add the check.
+- **You can see that the verdict check ran again.** Its description now ends with why it was posted, such as "(checked after a comment)": a recheck after a comment runs against the default branch and does not appear among the pull request's checks, and with the same verdict the text used to look unchanged.
+- **The hook no longer blocks harmless commands it cannot parse.** A command with, say, an apostrophe inside a heredoc is blocked only if it could push, merge or call an API.
+
+To upgrade a repository set up with 0.5.0, run `/shilaycow-setup` again: it updates the hook and the workflow and adds `__pycache__/` to `.gitignore`. Update the `--branch` tag in your cloud environment's setup script.
+
 ## 0.5.0
 
 ### The boundary

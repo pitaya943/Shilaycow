@@ -1,6 +1,6 @@
 {
   "name": "shilaycow",
-  "version": "0.5.0",
+  "version": "0.5.1",
   "description": "A development harness for Claude Code: standalone skills for each phase of the work, an auto mode (/shilaycow-chief, then /shilaycow-autopilot behind a gate) that composes them, and one server-side boundary that keeps agents out of main.",
   "author": { "name": "shilaycow contributors" },
   "license": "MIT",

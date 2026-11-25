@@ -22,7 +22,9 @@ in Claude Code before each Bash command and each GitHub tool call, and blocks:
     lose each other's commits: the second push is refused, and the fix is to fetch, merge and push again.
 
 Blocking exits 2 with the reason on stderr, which Claude Code shows the agent. It fails closed: input
-it cannot read is blocked too, since a lock that opens when confused is not a lock. Standard library only.
+it cannot read is blocked too, since a lock that opens when confused is not a lock. A Bash command it
+cannot split (an apostrophe inside a heredoc, say) is blocked only when it could push, merge or call an
+API; one that names none of those cannot change a branch, so it passes. Standard library only.
 """
 
 import json
@@ -306,7 +308,9 @@ def main():
         else:
             reason = check_github_tool(tool, tool_input, protected)
     except ValueError as error:  # an unbalanced quote: shlex cannot split it
-        reason = f"could not parse the command ({error})"
+        command = str(tool_input.get("command", ""))
+        risky = re.search(r"\b(push|merge|api|curl|wget|eval|statuses|check-runs|refs)\b", command)
+        reason = f"could not parse the command ({error}), and it could push, merge or call an API" if risky else None
     if reason:
         tail = "" if reason.startswith(CAS) else (" The default branch changes only through a pull request "
                                                   "the owner merges.")
