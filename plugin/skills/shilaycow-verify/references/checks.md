@@ -27,4 +27,4 @@ What each risk level means is in `shilaycow-blast-radius`: load it with your Ski
 
 ## A documents-only task
 
-A task whose deliverable is documents only (a specification, a design, a roadmap) has nothing to run: say that checks 1, 3 and 4 do not apply. Check instead, with a file and line for each, that its scenarios are under Not yet built and none was added under Scenarios, that each matches the brief, that none contradicts a scenario already under Scenarios, that the design gives every scenario a place, and that the roadmap gives every Not yet built scenario exactly one task.
+A task whose deliverable is documents only (a specification, a design, a roadmap) has nothing to run: say that checks 1 to 4 do not apply, check 2 included, since its scenarios are not built yet. Check instead, with a file and line for each, that its scenarios are under Not yet built and none was added under Scenarios, that each matches the brief, that none contradicts a scenario already under Scenarios, that the design gives every scenario a place, and that the roadmap gives every Not yet built scenario exactly one task.

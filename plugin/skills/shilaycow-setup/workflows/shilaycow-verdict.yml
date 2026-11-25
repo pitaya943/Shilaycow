@@ -9,7 +9,9 @@
 # The rule: the newest comment by the config's bot that opens with "## Verification: PASS" or
 # "## Verification: FAIL" and names the head's full commit decides. No such comment, or a FAIL, is a
 # failure. A new push makes a new head with no verdict, so the status turns red until it is judged.
-# A pull request the bot did not open is not a task's, and passes.
+# Every pull request into the default branch needs one, whoever opened it: one opened by another account
+# is red too, which is how a session connected as the wrong account is caught. The owner merges their
+# own pull requests by bypassing the ruleset as admin, which they must do anyway to skip the approval.
 name: shilaycow-verdict
 
 on:
@@ -85,7 +87,7 @@ jobs:
               if bot is None:
                   state, description = "failure", "no bot in .shilaycow/config.yml"
               elif pull["user"]["login"] != bot:
-                  state, description = "success", "not a task pull request: the bot did not open it"
+                  state, description = "failure", f"opened by {pull['user']['login']}, not the bot {bot}"
               else:
                   pages = subprocess.run(["gh", "api", "--paginate", "--slurp", f"repos/{repo}/issues/{number}/comments"],
                                          check=True, capture_output=True, text=True).stdout

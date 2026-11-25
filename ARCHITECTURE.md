@@ -49,7 +49,7 @@ Every action with a large blast radius (irreversible, external, or costly) gets 
 | Action | Why it is dangerous | Guard | Strength |
 |---|---|---|---|
 | Changing `main` | the one thing you cannot throw away | Ruleset: pull request required, one approval, no force push, no deletion. The bot opens the pull request, and GitHub does not let an author approve their own. The hook also stops a push to `main` or a merge in a session acting as you | Server side, and a hook |
-| Merging a head nobody judged | a push after the verdict would reach you unchecked | the workflow `shilaycow-verdict` posts the status `shilaycow/verdict` on the head: green only when the newest verdict naming that exact commit is a PASS. The ruleset requires it from GitHub Actions, so a status the bot posts does not count, and the hook blocks posting one | Server side |
+| Merging a head nobody judged | a push after the verdict, or a branch updated from `main`, would reach you unchecked | the workflow `shilaycow-verdict` posts the status `shilaycow/verdict` on the head of every pull request into `main`: green only when the newest verdict by the bot naming that exact commit is a PASS, so a pull request another account opened is red too. The ruleset requires it from GitHub Actions, with branches up to date, so the commit merged is the commit judged; a status the bot posts does not count, and the hook blocks posting one | Server side |
 | Changing settings, rulesets or collaborators | would remove the guard above | the bot has the Write role, not Admin | Server side |
 | Changing CI workflows | could disable required checks | a workflow changed on a branch runs only once you merge it: the verdict check runs the copy on `main`, never a pull request's, and the change is in the diff you read | Server side |
 | Reading or leaking secrets | cannot be taken back | the cloud environment holds no secrets | Configuration |
@@ -130,7 +130,7 @@ Two exits apply from **any** unattended state, so they are not drawn as arrows:
 | Building | tickets are being built, proven and merged into the task branch | `work/<slug>/T-nn` pull requests |
 | Finishing | `docs/spec/` is brought up to date, the final report is written | `docs/spec/`, `reports/final.md` |
 | Judging | an independent session is checking the exact head commit | verdict comment on the pull request, and the status `shilaycow/verdict` on that commit |
-| Fixing | one fix round fixes the whole class a FAIL names; at most `fix_rounds` (default 2) while a defect remains; once only gaps remain, the pull request goes to you with them listed | a new head commit |
+| Fixing | one fix round fixes the whole class a FAIL names; at most `fix_rounds` (default 2) while a defect remains; once only gaps remain, the verdict is a PASS that lists them | a new head commit |
 | Wrapping | everything after the verdict goes on GitHub, so the judged commit stays the one you merge | comments on the pull request and tracking issue |
 | AwaitingOwner | a pull request you can read, try and merge | the pull request |
 
@@ -170,14 +170,14 @@ Task 0 has nothing to run, so its verification is different: instead of tests an
 
 `shilaycow-verify` runs in a session that built none of the work, on a clean checkout of one head commit. It treats the builder's claims as claims, not evidence.
 
-<p align="center"><img src="assets/diagrams/08-verification.png" width="738" alt="How a verdict is reached. On a clean checkout of the head commit, a session that built any of the work stops: someone else verifies. Otherwise it runs six checks, each with evidence: tests, scenarios, the real thing, tests that can fail, what went unsaid, and the code itself (only scanned for low-risk work). Any FAIL condition gives Verification: FAIL with which check, whether it is a defect or a gap, how to reproduce, what was seen and where else the same kind of mistake was searched for; otherwise Verification: PASS, with findings for everything else."></p>
+<p align="center"><img src="assets/diagrams/08-verification.png" width="738" alt="How a verdict is reached. On a clean checkout of the head commit, a session that built any of the work stops: someone else verifies. Otherwise it runs six checks, each with evidence: tests, scenarios, the real thing, tests that can fail, what went unsaid, and the code itself (only scanned for low-risk work). Any failed item that is a defect gives Verification: FAIL with which check, whether each item is a defect or a gap, how to reproduce, what was seen and where else the same kind of mistake was searched for; otherwise Verification: PASS, with the gaps listed, if any, and findings for everything else."></p>
 
 Rules that make the verdict trustworthy:
 
 - **Evidence is a command and its output, a screenshot, a file and line.** Never a sentence.
 - **One verdict per head commit.** A new commit needs a new verdict, and nothing is pushed after the verdict on the pull request you merge. This one is enforced: the required status `shilaycow/verdict` turns red on any head without a PASS, so GitHub refuses to merge it.
 - **A finding never turns a PASS into a FAIL, and is never left out to keep a PASS clean.**
-- **Every failed item is a defect or a gap.** A gap means users can already do what the scenario says and the verifier saw it work; only the proof or the documents around it fall short. At high risk every failed item is a defect. Gaps still fail the verdict, but they do not keep the run fixing: once only gaps remain, the pull request comes to you with them listed, each with an issue for a later task.
+- **Every failed item is a defect or a gap.** A gap means users can already do what the scenario says and the verifier saw it work; only the proof or the documents around it fall short. At high risk every failed item is a defect. Only a defect fails the verdict: when every failed item is a gap, the verdict is a PASS with a `### Gaps` list, `Finished:` says how many there are, and each gets an issue for a later task. A gap therefore never makes you override the required check to merge.
 - **A FAIL names the class, not one instance.** For each failed item the verifier says where else it searched for the same kind of mistake, so a fix round fixes all of it instead of the one place that was seen.
 - **A fix round is judged by what changed.** A new verifier is given the earlier verdict and checks the full suite, every check that failed, and the diff between the two heads; if that diff changes code the product runs, it does every check again. Merging `main` into the branch is judged the same way and is not counted as a fix round.
 - **No behaviour ships on a test that cannot fail.** This is the only rule in the method layer that is enforced.
@@ -223,7 +223,7 @@ The loop runs at the start of the next task, not at the end of this one, so that
   worktrees/<session>/  where builders work, a folder per session; ignored by git
 .claude/
   hooks/shilaycow-guard.py   the hook that stops a push to main, a merge, and any push to a task's branches that is not a compare-and-swap
-  settings.json         runs the hook before every command and GitHub tool call
+  settings.json         runs the hook before every Bash command and the GitHub tools that merge or write branches
   skills/try-<app>/     how to start and drive your app, made by shilaycow-try-it
 .github/workflows/
   shilaycow-verdict.yml posts the status the ruleset requires: PASS for this exact head, or red
@@ -297,7 +297,7 @@ Nothing important lives in a conversation. Conversations are compressed and sess
 
 Because of this, running `/shilaycow-autopilot` again on the same task resumes it, after the same gate: the Chief rebuilds its picture from the repository and GitHub every time.
 
-**Two runs at once lose nothing.** There is no lock that could be left held. Instead, every write that could lose work is one only a single writer can win: pushes to the task's branches are compare-and-swaps the hook enforces, two first starts race on the same push and the loser stops, a ticket is claimed by creating its branch, the tracking issue is the one the trail names, and GitHub allows one open pull request per branch. A second run only duplicates effort, such as a second verifier. `shilaycow-status` reads the same sources to tell you, without changing anything, what the task is waiting on and what to do next.
+**Two runs at once lose nothing.** There is no lock that could be left held. Instead, every write that could lose work is one only a single writer can win: pushes to the task's branches are compare-and-swaps the hook enforces, two first starts race on the same push and the loser stops, a ticket is claimed by creating its branch, the tracking issue is the one the trail names, and GitHub allows one open pull request per branch. A second run only duplicates effort, such as a second verifier. This holds for the writes the hook can read: git push is the one way to write a task's branches, and the hook refuses a GitHub tool or API call that would write them. It reads the commands an agent writes; a push hidden behind an alias or a script is not followed, since the hook guards against mistakes, not evasion. `shilaycow-status` reads the same sources to tell you, without changing anything, what the task is waiting on and what to do next.
 
 ---
 

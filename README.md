@@ -53,14 +53,14 @@ Paste this into the environment's **Setup script**. Its network must reach `gith
 
 ```bash
 rm -rf /tmp/shilaycow-src
-git -c advice.detachedHead=false clone -q --depth 1 --branch v0.5.1 https://github.com/pitaya943/shilaycow.git /tmp/shilaycow-src \
+git -c advice.detachedHead=false clone -q --depth 1 --branch v0.5.2 https://github.com/pitaya943/shilaycow.git /tmp/shilaycow-src \
   && mkdir -p "${HOME:-/root}/.claude/skills" \
   && rm -rf "${HOME:-/root}"/.claude/skills/shilaycow-* \
   && cp -r /tmp/shilaycow-src/plugin/skills/. "${HOME:-/root}/.claude/skills/" \
   || echo "shilaycow skills were not installed" >&2
 ```
 
-Every session started in that environment has the skills as `/shilaycow-chief`, `/shilaycow-sharpen`, and so on. Where this README names a command, a plugin install spells it `/shilaycow:shilaycow-…`. A plugin installed on your own computer is not available in cloud sessions, so use the script there. The script installs version 0.5.1 and removes the skills an earlier version left; to move to a later version, change the `--branch` tag. It does not stop the session from starting if the clone fails, so a session without the skills still opens and says the command is unknown.
+Every session started in that environment has the skills as `/shilaycow-chief`, `/shilaycow-sharpen`, and so on. Where this README names a command, a plugin install spells it `/shilaycow:shilaycow-…`. A plugin installed on your own computer is not available in cloud sessions, so use the script there. The script installs version 0.5.2 and removes the skills an earlier version left; to move to a later version, change the `--branch` tag. It does not stop the session from starting if the clone fails, so a session without the skills still opens and says the command is unknown.
 
 **Upgrading from 0.3.x:** version 0.4 is not compatible. Follow the steps in [CHANGELOG.md](CHANGELOG.md) before your next task.
 

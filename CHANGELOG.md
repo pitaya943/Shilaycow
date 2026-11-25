@@ -1,11 +1,25 @@
 # Changelog
 
+## 0.5.2
+
+Closes the gaps an audit found between what 0.5 promised and what it enforced.
+
+- **Every pull request into the default branch needs a verdict.** One opened by another account is red too, so a session connected as the wrong account is caught by GitHub, not only by the verifier. Merge your own pull requests as before, by bypassing the ruleset as admin.
+- **A gap no longer blocks the merge.** When every failed item is a gap, the verdict is a PASS with a `### Gaps` list, and `Finished:` says how many there are. Before, a gap-only FAIL turned the required check red and left you only the admin bypass. Only a defect fails a verdict now.
+- **The commit you merge is the commit that was judged.** `by-hand.md` step 2 now also has you tick **Require branches to be up to date before merging**: updating a branch from the default branch makes a new head, which is red until it is judged again.
+- **git push is the only way to write a task's branches.** The hook now refuses a GitHub tool or API call that writes, creates or updates a `task/` or `work/` branch, since none of those can carry the compare-and-swap that keeps two sessions from losing each other's work.
+- **Upgrades reach the hook and the workflow.** Setup replaces its own two files when they differ from the version it ships, in its pull request; it still never overwrites any other file.
+- A documents-only task no longer fails verification for having no built scenarios, and `/shilaycow-chief` opens nothing on GitHub when the session is not the bot, so a wrong account cannot leave a tracking issue every verdict would fail.
+- Builders post their `Ready.` comment with the GitHub tools or `--body-file`, which the hook never mistakes for a push.
+
+To upgrade, run `/shilaycow-setup` again: its pull request replaces the hook and the workflow. Then, in the ruleset, edit the `shilaycow/verdict` check and tick **Require branches to be up to date before merging**. Update the `--branch` tag in your cloud environment's setup script.
+
 ## 0.5.1
 
 Fixes from running 0.5.0 end to end on a real repository.
 
 - **Setup no longer commits Python's cache.** Its `.gitignore` also ignores `__pycache__/`, and it adds its files to the commit by path.
-- **Making the verdict check required works the first time.** GitHub lists a check only after it has run, so `by-hand.md` now has you open a one-line pull request first, wait for the red `shilaycow/verdict`, close it, and then add the check.
+- **Making the verdict check required works the first time.** GitHub lists a check only after it has run, so `by-hand.md` now has you ask a session to open a one-line pull request first, wait for the red `shilaycow/verdict`, close it, and then add the check.
 - **You can see that the verdict check ran again.** Its description now ends with why it was posted, such as "(checked after a comment)": a recheck after a comment runs against the default branch and does not appear among the pull request's checks, and with the same verdict the text used to look unchanged.
 - **The hook no longer blocks harmless commands it cannot parse.** A command with, say, an apostrophe inside a heredoc is blocked only if it could push, merge or call an API.
 

@@ -19,7 +19,12 @@ in Claude Code before each Bash command and each GitHub tool call, and blocks:
   - a push to a shared branch (task/ or work/) that is not a compare-and-swap: it must carry
     --force-with-lease=<branch>:<the commit fetched> (empty when creating the branch), and a push to
     task/ must also be a fast-forward of that commit. Two sessions writing the same branch then cannot
-    lose each other's commits: the second push is refused, and the fix is to fetch, merge and push again.
+    lose each other's commits: the second push is refused, and the fix is to fetch, merge and push again;
+  - any other write to a shared branch (a GitHub tool's file write, branch creation or branch update, or
+    the API's contents and refs), since none of those can carry a lease: git push is the one way in.
+
+It reads the commands an agent writes, not every way a program could reach git: an alias, a script or
+xargs that runs git is not followed. It is a guard against mistakes, not against an agent set on evasion.
 
 Blocking exits 2 with the reason on stderr, which Claude Code shows the agent. It fails closed: input
 it cannot read is blocked too, since a lock that opens when confused is not a lock. A Bash command it
@@ -236,6 +241,12 @@ def check_api(words, protected):
         branch = re.search(r"branch=([^\s&]+)", joined)
         if branch is None or branch.group(1) in protected:
             return "writing a file to the default branch through the API (no branch, or the default branch)"
+        if branch.group(1).startswith(SHARED):
+            return f"{CAS} {branch.group(1)}: write it with a commit and git push, which the hook checks"
+    shared_ref = re.search(r"/git/refs/heads/((?:task|work)/[^?\s]+)", path) or re.search(
+        r"refs/heads/((?:task|work)/\S+)", joined) if re.search(r"/git/refs\b", path) else None
+    if shared_ref:
+        return f"{CAS} {shared_ref.group(1)}: move it with git push, which the hook checks"
     return None
 
 
@@ -287,9 +298,16 @@ def check_bash(command, protected, branch=...):
 def check_github_tool(tool, tool_input, protected):
     if re.search(r"merge_pull_request|enable_pr_auto_merge", tool):
         return OWNER_ONLY
+    branch = str(tool_input.get("branch", ""))
     if re.search(r"push_files|create_or_update_file|delete_file", tool):
-        if str(tool_input.get("branch", "")) in protected:
+        if branch in protected:
             return "writing to the default branch through the GitHub tools"
+        if branch.startswith(SHARED):
+            return f"{CAS} {branch}: write it with a commit and git push, which the hook checks"
+    if re.search(r"create_branch", tool) and branch.startswith(SHARED):
+        return f"{CAS} {branch}: create it with git push --force-with-lease={branch}: so only one session can"
+    if re.search(r"update_pull_request_branch", tool):
+        return f"{CAS} pull request branch: update it with git fetch, git merge and a leased git push"
     return None
 
 
