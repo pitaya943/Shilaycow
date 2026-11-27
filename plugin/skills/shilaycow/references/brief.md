@@ -28,13 +28,13 @@ And for every scenario you can name a test that would fail today (or, for one th
 - Restate first. Use your own words, not the user's phrasing rearranged, and prefer the narrow reading of the request: say what you would leave out. A misunderstanding caught here costs nothing.
 - Write a first draft of the brief from what you already know, then ask about the gaps. Keep the file current as answers arrive.
 - Ask the user about outcomes only: how they will use it, what counts as failure, what they would be upset to find missing. Offering your recommended answer with each question lets them accept in a word.
-- Answer technical questions yourself by reading the repository (`shilaycow-how`, `shilaycow-why`). Do not ask the user what the code can tell you.
+- Answer technical questions yourself by reading the repository (`sc-how`, `sc-why`). Do not ask the user what the code can tell you.
 - Write the brief in English, whatever language the conversation is in.
 
 ## Stop when
 
 - The user says it is enough. Write what is still unknown under the scenario it affects, as an assumption.
-- The idea is several tasks: more than one pull request a person could review closely. Say so, propose the chain as `docs/roadmap.json` (`shilaycow-spec` gives its form), and write the brief for the first only. Order it so that what is hardest to change later comes first, nothing comes before what it depends on, and every task after the first leaves something a user can try. For a large system the first task's deliverable is the specification itself: documents only, its scenarios under Not yet built. When the user would rather the first task also build something, it still writes the spec and the roadmap first, and records that choice in the trail.
+- The idea is several tasks: more than one pull request a person could review closely. Say so, propose the chain as `docs/roadmap.json` (`sc-spec` gives its form), and write the brief for the first only. Order it so that what is hardest to change later comes first, nothing comes before what it depends on, and every task after the first leaves something a user can try. For a large system the first task's deliverable is the specification itself: documents only, its scenarios under Not yet built. When the user would rather the first task also build something, it still writes the spec and the roadmap first, and records that choice in the trail.
 
 ## Outputs
 

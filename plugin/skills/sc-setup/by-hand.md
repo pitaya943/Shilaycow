@@ -14,7 +14,7 @@ Why: the bot needs to push branches and open pull requests, and must not be able
 
 The quick way is to import the ruleset this harness ships:
 
-1. Save `plugin/skills/shilaycow-setup/ruleset.json` from the shilaycow repository to your computer (open the file on github.com and use **Download raw file**).
+1. Save `plugin/skills/sc-setup/ruleset.json` from the shilaycow repository to your computer (open the file on github.com and use **Download raw file**).
 2. In your repository open **Settings**, then **Rules**, then **Rulesets**.
 3. Choose **New ruleset**, then **Import a ruleset**, and select the file.
 4. Check that **Enforcement status** is **Active**, then **Create**.
@@ -30,9 +30,9 @@ Leave everything else off, and **Create**.
 
 Why: after this, the only way into the default branch is a pull request. The bot opens it and cannot approve its own; the owner merges it. The owner can still merge their own pull requests without a second person.
 
-**Once the setup pull request is merged**, so the verdict workflow is on the default branch: GitHub lists a check here only after it has run once, so first have a session open a pull request into the default branch that changes one line, wait until it shows a red `shilaycow/verdict`, and close it without merging. Then edit the same ruleset, tick **Require status checks to pass**, add the check `shilaycow/verdict`, set its source to **GitHub Actions**, so only the workflow can turn it green, not a status posted by an account, and tick **Require branches to be up to date before merging**, so the commit you merge is the commit that was judged: updating a branch from the default branch makes a new head, whose status is red until it is judged again. The setup pull request itself has no verdict: merge it before this step. From then on a task's pull request can be merged only at a head with a PASS; you can still bypass the rule as admin, deliberately, for a pull request you made yourself.
+**Once the setup pull request is merged**, so the verdict workflow is on the default branch: GitHub lists a check here only after it has run once, so first have a session open a pull request into the default branch that changes one line, wait until it shows a red `shilaycow/verdict`, and close it without merging. Then edit the same ruleset, tick **Require status checks to pass**, add the check `shilaycow/verdict`, set its source to **GitHub Actions**, so only the workflow can turn it green, not a status posted by an account, and tick **Require branches to be up to date before merging**, so the commit you merge is the commit that was judged: updating a branch from the default branch makes a new head, whose status is red until it is judged again. The setup pull request itself has no verdict: merge it before this step. From then on a task's pull request can be merged only at a head with a PASS; you can still bypass the rule as admin, deliberately, on any pull request.
 
-**Later, once the project runs its tests in a workflow on pull requests:** edit the same ruleset, tick **Require status checks to pass**, and add that workflow's check. From then on a pull request whose tests fail cannot be merged, whatever a verdict says. Run `/shilaycow-setup` again afterwards; it reads the rules in force and confirms the check.
+**Later, once the project runs its tests in a workflow on pull requests:** edit the same ruleset, tick **Require status checks to pass**, and add that workflow's check. From then on a pull request whose tests fail cannot be merged, whatever a verdict says. Run `/sc-setup` again afterwards; it reads the rules in force and confirms the check.
 
 ## 3. Delete branches once they are merged
 

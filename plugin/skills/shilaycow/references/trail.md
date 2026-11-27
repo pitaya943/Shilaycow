@@ -14,7 +14,7 @@ Each row says what was decided, why in plain words, and where the evidence is: a
 
 ## How
 
-Write the row when you decide, not at the end. Append only: to reverse a decision, add a row. Routine steps are not decisions; do not log them.
+Write the row when you decide, not at the end. Append only: to reverse a decision, add a row. Routine steps are not decisions; do not log them. The only rows anything reads are `brief-approved <commit>` and `fix-round <T-nn or main>`; do not copy other kinds of marker row from an earlier task's trail.
 
 A builder is given the header and posts its rows, in those columns, in its pull request's `Ready.` comment; the orchestrator adds them to the file when it lands that pull request on the task branch, fitting any that do not match.
 

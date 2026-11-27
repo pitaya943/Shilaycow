@@ -1,6 +1,6 @@
 ---
-name: shilaycow-try-it
-description: "Use in a project's first task to generate a project-local skill that starts the real app and drives it as a user would, or when that skill has gone stale. Don't use to judge a change: use shilaycow-verify."
+name: sc-try-it
+description: "Use in a project's first task to generate a project-local skill that starts the real app and drives it as a user would, or when that skill has gone stale. Don't use to judge a change: use sc-verify."
 ---
 
 # Try it

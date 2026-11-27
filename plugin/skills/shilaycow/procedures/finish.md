@@ -4,7 +4,7 @@ Read this when every ticket has landed on the task branch. **You own the verdict
 
 ## Before the pull request
 
-First fetch and check that your checkout's head is the task branch's head on the remote: the spec, the description and blast radius must describe what the owner will merge, not an older state. Then, if the task changed the system's shape, bring `docs/spec/` up to date with what was built (`shilaycow-spec`), copy into `docs/tasks/<slug>/spikes/` any file on a `spike/` branch that the trail cites (with a trail row saying where it now is). Everything the owner will merge is on the branch before the first verdict.
+First fetch and check that your checkout's head is the task branch's head on the remote: the spec, the description and blast radius must describe what the owner will merge, not an older state. Then, if the task changed the system's shape, bring `docs/spec/` up to date with what was built (`sc-spec`), copy into `docs/tasks/<slug>/spikes/` any file on a `spike/` branch that the trail cites (with a trail row saying where it now is). Everything the owner will merge is on the branch before the first verdict.
 
 If a scenario is not met, for instance one still waiting on a `needs-owner` issue, do not open the pull request into `main`: post the description below on the tracking issue, its first sentence saying what is missing, set Waiting on to what holds it, cancel your timed checks and end. The decision is the owner's; once they answer, typing `/shilaycow run` continues.
 

@@ -11,7 +11,7 @@ repository every time. It reads git only, so it cannot see GitHub: verdicts, the
 the owner's comments are for your GitHub tools. That includes who you act as.
 
 `problems` lists what must not be worked past; the exit status is 1 when it is not empty. Each check
-names, in a comment, the guard in guards/guards.tsv it implements, or the failure it grew from.
+says, in a comment, the failure it grew from or what it protects.
 `warnings` are the brief's shape: the owner approved it as it is, so they never stop a run.
 
 Standard library only; Python 3.9.
@@ -94,7 +94,7 @@ def brief_warnings(brief):
 
 def roadmap(text):
     """(tasks, problems) for docs/roadmap.json: {"tasks": [{slug, goal, depends_on, pr, done}, ...]}.
-    Guard K12: a new session must compute the next task, not guess it."""
+    A new session must compute the next task, not guess it."""
     try:
         tasks = json.loads(text)["tasks"]
         assert isinstance(tasks, list)
@@ -163,9 +163,9 @@ def state(argv):
     if config.get("fix_rounds", "").isdigit():
         out["fix_rounds"]["limit"] = int(config["fix_rounds"])
     if text is None:
-        problems.append("no .shilaycow/config.yml on the default branch: manual mode -> run /shilaycow-setup")
+        problems.append("no .shilaycow/config.yml on the default branch: manual mode -> run /sc-setup")
     elif config.get("mode") != "auto":
-        problems.append(f"mode is '{config.get('mode')}', not 'auto' -> run /shilaycow-setup again (see the CHANGELOG)")
+        problems.append(f"mode is '{config.get('mode')}', not 'auto' -> run /sc-setup again (see the CHANGELOG)")
 
     tasks = []
     road = git("show", f"{head}:{ROADMAP}")
@@ -174,7 +174,7 @@ def state(argv):
         problems.extend(found)
         out["next_task"] = next_task(tasks)
 
-    # One task at a time (guard K7): the next starts from the merged main.
+    # One task at a time: the next starts from the merged main.
     out["open_tasks"] = sorted(b.strip().removeprefix("origin/task/") for b in
                                (git("branch", "-r", "--no-merged", head, "--list", "origin/task/*") or "").splitlines() if b.strip())
     slug = argv[0] if argv else (out["open_tasks"][0] if len(out["open_tasks"]) == 1 else None)
@@ -190,13 +190,13 @@ def state(argv):
     if git("rev-parse", "--verify", "--quiet", branch) is None:
         problems.append(f"no task/{slug} on the remote -> agree a brief first")
         return out
-    # A roadmap task starts only once what it depends on is done (K12).
+    # A roadmap task starts only once what it depends on is done.
     entry = next((t for t in tasks if t["slug"] == slug), None)
     waiting = [d for d in (entry or {}).get("depends_on", []) if not any(t["slug"] == d and t["done"] for t in tasks)]
     if waiting:
         problems.append(f"'{slug}' depends on {', '.join(waiting)}, not done in {ROADMAP}")
 
-    # The approval names the commit that last changed the brief (guard K4). Grew from: a gate that
+    # The approval names the commit that last changed the brief. Grew from: a gate that
     # opened on a draft brief, and a brief changed after it was approved.
     brief = git("show", f"{branch}:docs/tasks/{slug}/brief.md")
     if brief is None:
@@ -214,7 +214,7 @@ def state(argv):
         landed = git("merge-base", "--is-ancestor", ref, branch) is not None
         out["tickets"][ref.rsplit("/", 1)[-1]] = "landed" if landed else "open"
 
-    # Fix rounds (guard K8): one trail row `fix-round <T-nn or main>` per round, counted here so a
+    # Fix rounds: one trail row `fix-round <T-nn or main>` per round, counted here so a
     # loop that never passes stops at the limit instead of running on.
     rounds = out["fix_rounds"]
     for scope in trail_cells(trail, "fix-round", r"T-\d+|main"):

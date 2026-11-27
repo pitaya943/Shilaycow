@@ -26,7 +26,7 @@ What the user typed after the command decides which file you read, and you read 
 
 `run` is the only start of unattended work. Anything else, however it is worded ("go", "start it"), is answered with the command, never by starting.
 
-With no config, or `mode` not `auto`, there is no unattended part: say so, name the skills the user can call directly, and point to `/shilaycow-setup`.
+With no config, or `mode` not `auto`, there is no unattended part: say so, name the skills the user can call directly, and point to `/sc-setup`.
 
 ## The boundary
 
@@ -37,6 +37,10 @@ These few things limit what a mistake can cost. They are not yours to judge.
 - **The brief is what the owner approved.** It changes only with their approval and a new `brief-approved` row (`procedures/agree.md`).
 - **Every pull request into `main` is judged by a session that built none of it**, and nothing is pushed after the last verdict: the commit the owner merges is the commit that was judged.
 - **The owner can stop you.** A `stop` from the owner's own account on the tracking issue ends the run.
+
+## Talking to the owner
+
+In the conversation, say only what needs the owner and where to look: a pull request to review and merge, a `needs-owner` issue to answer, a question about the brief. Link to it; never repeat what the pull request, the issue or a comment already says.
 
 ## Dispatching
 

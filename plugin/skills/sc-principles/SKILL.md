@@ -1,6 +1,6 @@
 ---
-name: shilaycow-principles
-description: "Use when choosing between two designs, judging whether a change is the smallest that works, or reviewing code for whoever maintains it next. Don't use to decide how a behaviour is proven: use shilaycow-prove."
+name: sc-principles
+description: "Use when choosing between two designs, judging whether a change is the smallest that works, or reviewing code for whoever maintains it next. Don't use to decide how a behaviour is proven: use sc-prove."
 ---
 
 # Principles

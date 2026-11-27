@@ -19,14 +19,14 @@ Bring in what earlier tasks left, so the user weighs it while approving:
 
 - Fold into the pitfalls file on the task branch every `Retro:` comment and owner comment of a closed tracking issue whose link the file does not yet cite as a source (`references/learning.md`, "Folding it in"). Citing sources makes this safe to repeat.
 - For each entry now counted twice or more and not yet guarded, propose its correction as scenarios of this task (`references/learning.md`, "Correcting a class"), unless it says `Correct: none possible at count <n>` and its count is still `<n>`.
-- When the user asks, or what you read of the code disagrees with the spec, check the areas this task touches for drift (`shilaycow-spec`), and show the user what does not hold. For each item they decide whether the spec or the code is wrong; what this task will not settle becomes a `later` issue.
+- When the user asks, or what you read of the code disagrees with the spec, check the areas this task touches for drift (`sc-spec`), and show the user what does not hold. For each item they decide whether the spec or the code is wrong; what this task will not settle becomes a `later` issue.
 - List the open `later` issues in the areas this task touches and offer to fold them in. The user decides.
 
 ## The brief
 
-Write it with the user as `references/brief.md` describes, and design together if they want to (`shilaycow-plan`, "When the shape is open"). Discuss as long as they like: nothing here dispatches a builder or a verifier. When they say "start", "go" or anything like it, do not start; give them the command.
+Write it with the user as `references/brief.md` describes, and design together if they want to (`sc-plan`, "When the shape is open"). Discuss as long as they like: nothing here dispatches a builder or a verifier. When they say "start", "go" or anything like it, do not start; give them the command.
 
-When the task begins a chain (`references/brief.md`), the roadmap is approved like the brief: the user says it is right, you push it and add the trail row `roadmap-approved <commit>` for the commit that last changed `docs/roadmap.json`, which must go on to pass `state.py`. A project with no `docs/spec/` gets one in the first task of the chain, before anything is built (`shilaycow-spec`).
+When the task begins a chain (`references/brief.md`), the roadmap is approved like the brief: the user says it is right, you push it and add the trail row `roadmap-approved <commit>` for the commit that last changed `docs/roadmap.json`, which must go on to pass `state.py`. A project with no `docs/spec/` gets one in the first task of the chain, before anything is built (`sc-spec`).
 
 Before you ask for approval, have a reader who was not in this conversation read the brief: you read into it what the user meant, and builders will have only what it says.
 

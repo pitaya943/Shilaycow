@@ -1,5 +1,5 @@
 ---
-name: shilaycow-spec
+name: sc-spec
 description: "Use when a task changes the system's shape, to fold its scenarios into docs/spec/ before its pull request; to keep the roadmap of a chain of tasks; or when asked, to check an area against the code for drift or build a first spec. Don't use to write one task's brief: use /shilaycow."
 ---
 
@@ -51,7 +51,7 @@ Write in the present tense, with these headings in English. Scenarios holds only
 
 Let the tree grow only when it has to. A small system is one area file. When an area grows past what a reader can hold at once (about 150 lines is a fair sign), make it a folder, `<area>/index.md` with a file for each part, and keep the links in the index working.
 
-To build a first spec for a project that has none, write what you can show: read the tests, run the product (`shilaycow-how`, `try-<app>`), and mark anything you inferred and could not run as unverified. Write in English.
+To build a first spec for a project that has none, write what you can show: read the tests, run the product (`sc-how`, `try-<app>`), and mark anything you inferred and could not run as unverified. Write in English.
 
 ## Drift
 
@@ -64,4 +64,4 @@ A spec that is wrong misleads every task that starts from it. When the owner ask
 
 ## Outputs
 
-`docs/spec/`. `/shilaycow` reads it before writing a brief, `shilaycow-verify` checks it against the work, and `shilaycow-how` starts from it.
+`docs/spec/`. `/shilaycow` reads it before writing a brief, `sc-verify` checks it against the work, and `sc-how` starts from it.

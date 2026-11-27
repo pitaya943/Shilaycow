@@ -1,5 +1,5 @@
 ---
-name: shilaycow-verify
+name: sc-verify
 description: "Use to judge a pull request into main, or a ticket that deserves its own verdict, from a session that built none of it; posts PASS or FAIL for one commit. Don't use on work you built: start a fresh session."
 ---
 

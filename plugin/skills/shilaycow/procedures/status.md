@@ -19,6 +19,6 @@ Anything in `problems` comes first, with its fix.
 
 For a job ("I want to understand the payment code", "I am about to change the retry logic"), name the one to three skills that fit, in the order to use them, each with its command and one line on why it fits rather than the skill it is most easily confused with. Choose from the skills' descriptions, which say when not to use each. Any skill but `/shilaycow` can be typed directly in either mode; a whole task, meaning work that should end in a pull request, is `/shilaycow` in auto mode. If the job could mean two things, ask that one question and stop. If no skill fits, say so rather than stretching one.
 
-In manual mode (no config, or `mode` not `auto`) a whole task goes by hand: write the scenarios with the user, then `/shilaycow-plan` (which designs first when the shape is open), each ticket with `/shilaycow-prove`, and `/shilaycow-verify` from a fresh session. `/shilaycow-setup` turns on auto mode.
+In manual mode (no config, or `mode` not `auto`) a whole task goes by hand: write the scenarios with the user, then `/sc-plan` (which designs first when the shape is open), each ticket with `/sc-prove`, and `/sc-verify` from a fresh session. `/sc-setup` turns on auto mode.
 
 Point, never run: the user types the command, so the choice stays theirs. Nothing is written, pushed, commented or started.

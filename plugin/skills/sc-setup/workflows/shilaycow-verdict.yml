@@ -13,10 +13,10 @@
 # is red too, which is how a session connected as the wrong account is caught. The owner merges their
 # own pull requests by bypassing the ruleset as admin, which they must do anyway to skip the approval.
 #
-# Two more checks, each from a failure seen in a real run (guards/guards.tsv, K3 and K5):
-# - K3: the PASS must come from a session that built none of it. Its `Session:` line may not name a
+# Two more checks, each from a failure seen in a real run:
+# - the PASS must come from a session that built none of it. Its `Session:` line may not name a
 #   session that signed a Ready comment, a commit's Claude-Session trailer or the description's link.
-# - K5: every commit on the pull request is authored by the bot or the owner, as GitHub resolves its
+# - every commit on the pull request is authored by the bot or the owner, as GitHub resolves its
 #   email; a commit under git's default identity is linked to no account and turns the status red.
 name: shilaycow-verdict
 

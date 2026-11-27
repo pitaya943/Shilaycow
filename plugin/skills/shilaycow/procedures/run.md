@@ -28,7 +28,7 @@ Then one judgement the script cannot make: every scenario can be shown by a chec
 
 ## The goal list
 
-The tracking issue's comment whose first line is `<!-- shilaycow:goal-list -->`, normally its first comment; find it by that line, not by its place. Only you edit it; builders and verifiers read the issue but never change it. Read it just before each edit and change only the lines that changed. Under the marker:
+The tracking issue's comment whose first line is `<!-- shilaycow:goal-list -->`, normally its first comment; find it by that line, not by its place. Write it in the form below only, even where an earlier task's issue shows more lines: fix rounds are counted from the trail, not here. Only you edit it; builders and verifiers read the issue but never change it. Read it just before each edit and change only the lines that changed. Under the marker:
 
 - **Read up to**: for this issue and for each `needs-owner` issue the trail names, the link of the newest owner comment on it you have acted on.
 

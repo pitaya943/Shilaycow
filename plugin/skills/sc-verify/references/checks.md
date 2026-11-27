@@ -9,19 +9,19 @@ Read this before you start checking. Record evidence for each check on a clean c
 3. **The real thing**: you followed the "how to try it" steps with `try-<app>` and they work as written. Where there is no `try-<app>` (a library with nothing to start, or work before the ticket that creates it), follow the brief's manual steps by hand instead, and say so. "How to try it" means the brief's steps for the scenarios this work serves.
 4. **Tests that can fail**: for each scenario shown by a test, you broke the behaviour in a throwaway copy and the test failed; and its expected values come from the scenario, not from the code under test.
 5. **What went unsaid**: anything the diff changes that neither the description nor the trail mentions, including any part of the diff your paraphrase could not account for. One that changes behaviour a user or another part of the system can see is significant, and fails this check. And what the brief never settled: try the extremes a user could reach (very long, very many, empty, repeated, two at once) and list what happens as `unspecified`, for the owner to decide. The `unspecified` items are not defects.
-6. **The code itself**: read it as the person who will maintain it, against `shilaycow-principles`. Is there work no scenario asked for, a smaller change that would have done, a leftover of an abandoned attempt, state with two owners? Go through the diff file by file, and cite a file and line for every conclusion, the favourable ones too: a judgement with nothing cited was not made.
+6. **The code itself**: read it as the person who will maintain it, against `sc-principles`. Is there work no scenario asked for, a smaller change that would have done, a leftover of an abandoned attempt, state with two owners? Go through the diff file by file, and cite a file and line for every conclusion, the favourable ones too: a judgement with nothing cited was not made.
 
 ## How deep, by risk
 
-What each risk level means is in `shilaycow-blast-radius`: load it with your Skill tool (`shilaycow-blast-radius`, or `shilaycow:shilaycow-blast-radius` for a plugin install) before you set levels. Before you start, set each ticket's level again from its diff: you may raise the level the plan gave it, never lower it, and say why when you raise it. Changes on the branch that came from no ticket, such as the orchestrator's own commits or a merge resolution, count as a ticket of at least medium.
+What each risk level means is in `sc-blast-radius`: load it with your Skill tool (`sc-blast-radius`, or `shilaycow:sc-blast-radius` for a plugin install) before you set levels. Before you start, set each ticket's level again from its diff: you may raise the level the plan gave it, never lower it, and say why when you raise it. Changes on the branch that came from no ticket, such as the orchestrator's own commits or a merge resolution, count as a ticket of at least medium.
 
 - **Low**: every check, with two lighter ones. Check 4 breaks one behaviour per scenario, the one its main test guards. Check 6 scans the diff instead of reading it file by file: confirm it touches only what its level says, which is also how a level set too low is caught.
 - **Medium**: every check; check 4 as for low, then as many other behaviours as the time allows, saying which you broke.
-- **High**: every check; check 4 breaks every behaviour the ticket touches; and `shilaycow-blast-radius` on that ticket's diff. For a pull request into `main`, one run against `main` covers this too, as long as it lists each high ticket's facts under its own heading.
+- **High**: every check; check 4 breaks every behaviour the ticket touches; and `sc-blast-radius` on that ticket's diff. For a pull request into `main`, one run against `main` covers this too, as long as it lists each high ticket's facts under its own heading.
 
 ## A pull request into main, in addition
 
-- If it changes the system's code, run `shilaycow-blast-radius` against `main`.
+- If it changes the system's code, run `sc-blast-radius` against `main`.
 - Compare `brief.md` at the head with the commit of the trail's last `brief-approved` row. Any difference, a status line or layout included, is a defect unless the owner approved it in a comment on the tracking issue and a newer `brief-approved` row names it.
 - Check that the pull request and the task's tracking issue were opened by the config's `bot`.
 

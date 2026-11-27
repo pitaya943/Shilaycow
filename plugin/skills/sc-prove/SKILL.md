@@ -1,6 +1,6 @@
 ---
-name: shilaycow-prove
-description: "Use when building a behaviour a scenario names, to decide how it is proven: a test seen to fail, or a recorded run of the real app where a test would be a bad one. Don't use to judge someone else's work: use shilaycow-verify."
+name: sc-prove
+description: "Use when building a behaviour a scenario names, to decide how it is proven: a test seen to fail, or a recorded run of the real app where a test would be a bad one. Don't use to judge someone else's work: use sc-verify."
 ---
 
 # Prove

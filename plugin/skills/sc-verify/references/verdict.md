@@ -13,7 +13,7 @@ It is a **FAIL** when any of these is true:
 - a behaviour is reported as proven with neither a test nor a recorded driven check;
 - the diff makes a significant change nobody mentioned;
 - the same state has two owners that can disagree, or leftover code changes behaviour beyond the scenarios;
-- for a pull request into `main`, a `shilaycow-blast-radius` fact is false and something existing depends on it;
+- for a pull request into `main`, a `sc-blast-radius` fact is false and something existing depends on it;
 - for a pull request into `main`, it or the task's tracking issue was opened by an account other than the config's `bot`: the run acted as someone else, which no other check can see;
 - for a pull request into `main`, `brief.md` differs from the last approved brief without the owner's approval;
 - for a documents-only task, any of its checks is false.

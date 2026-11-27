@@ -1,6 +1,6 @@
 ---
-name: shilaycow-why
-description: "Use for 'why is X this way', design rationale, a regression's history, or before undoing an earlier decision. Don't use for how something behaves: use shilaycow-how."
+name: sc-why
+description: "Use for 'why is X this way', design rationale, a regression's history, or before undoing an earlier decision. Don't use for how something behaves: use sc-how."
 ---
 
 # Why

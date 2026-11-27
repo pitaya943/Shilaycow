@@ -15,7 +15,7 @@ A verdict whose only failed items are gaps is a PASS with a `### Gaps` list. On 
 Fix the whole class each defect names, not only the place named, and give the builder the verdict.
 
 - **A ticket not yet merged** is fixed on its own `work/<slug>/T-<nn>` branch and pull request, with a new Ready comment.
-- **The pull request into `main`** is fixed by a new ticket on `work/<slug>/T-<nn>` off the task branch, landed on it like any other ticket. Then bring the spec and the pull request's description up to date for the new head (`shilaycow-spec`, `procedures/finish.md`) before the next verdict: a stale spec is itself a defect.
+- **The pull request into `main`** is fixed by a new ticket on `work/<slug>/T-<nn>` off the task branch, landed on it like any other ticket. Then bring the spec and the pull request's description up to date for the new head (`sc-spec`, `procedures/finish.md`) before the next verdict: a stale spec is itself a defect.
 
 Then give a new verifier the new head and the verdict before it. A fix keeps its ticket's risk level (a fix ticket for the pull request into `main` is given its own), so a high one is judged on its own too, on what changed since its last verdict. When a defect's cause matches an entry in `.shilaycow/pitfalls.md`, it has happened again despite the note: first correct it as `references/learning.md` describes ("Correcting a class"), listing every instance of the class and adding a guard that fails on each, then fix. Merging `main` into the branch also makes a new head that needs a verdict, but it is not a fix round.
 

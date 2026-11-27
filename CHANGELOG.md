@@ -1,8 +1,16 @@
 # Changelog
 
+## 0.6.1
+
+- **The orchestrator says less in the conversation.** It names what needs you and links to it (a pull request to review, a `needs-owner` issue), and no longer repeats what the pull request or issue already says.
+- **Upgrading from 0.5 tidies the leftovers.** Setup rewrites config comments that name `/shilaycow-chief` or `/shilaycow-autopilot`, and a run no longer copies the 0.5 `tracking-issue` trail row or the goal list's `Rounds:` line from earlier tasks.
+- **The documents say what the harness does, and no more.** The README, ARCHITECTURE and diagrams now say what the verdict check compares (a PASS from a session that signed none of the work) and that you can bypass it as admin; that setup does not check the cloud environment's network; that gaps and findings are left for you or filed as `later` issues; and they drop the final report, now the pull request's description.
+- **Shorter names: `sc-` instead of `shilaycow-`.** The ten skills you call on their own are now `/sc-plan`, `/sc-prove`, `/sc-verify`, `/sc-how`, `/sc-why`, `/sc-spec`, `/sc-blast-radius`, `/sc-principles`, `/sc-try-it` and `/sc-setup` (`/shilaycow:sc-…` as a plugin). The one command stays `/shilaycow`. The setup script removes the old `shilaycow-*` folders when it installs this version.
+- **ARCHITECTURE shows the five layers.** Its section 2 diagram, which still listed the skills 0.6.0 merged, now shows the entry, procedures and roles, knowledge, computation and the boundary.
+
 ## 0.6.0
 
-A simpler harness: one command, eleven skills, and only the guards a real failure or an irreversible step calls for, each with a proof. The guarantees are the same: nothing reaches `main` unless you merge a head an independent verifier passed.
+A simpler harness: one command, eleven skills, and only the guards a real failure or an irreversible step calls for, each with a proof. The guarantees are the same: nothing reaches `main` unless you merge it, and GitHub refuses a head without a PASS from a session that signed none of the work, unless you bypass it as admin.
 
 - **The verdict check refuses a self-judged PASS.** A PASS counts only when its `Session:` names no session that signed a `Ready.` comment, a commit's `Claude-Session:` trailer or the pull request's description.
 - **Every commit must be linked to the bot or to you.** A commit made under git's default identity, which belongs to no GitHub account, turns the verdict check red and names the commit.

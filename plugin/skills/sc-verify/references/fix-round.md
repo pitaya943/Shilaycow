@@ -6,7 +6,7 @@ Judge what changed since then, not the whole branch again:
 
 - run the full suite;
 - redo every check that verdict failed, with the search for its class;
-- read the diff between the two heads against `shilaycow-principles`;
+- read the diff between the two heads against `sc-principles`;
 - break the behaviours that diff touches.
 
 Link the earlier verdict in yours. If the diff changes code the product runs, rather than tests, documents or developer tools, do every check again as for a first verdict. The additions for a pull request into `main` (the brief against its approval, who opened it, blast radius against `main`) are always redone: a fix can change any of them.

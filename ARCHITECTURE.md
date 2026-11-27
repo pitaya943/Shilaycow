@@ -5,7 +5,7 @@ This document explains the harness as a system: what it is made of, what it guar
 **Contents**
 
 1. [The idea in one paragraph](#1-the-idea-in-one-paragraph)
-2. [Three layers](#2-three-layers)
+2. [Five layers](#2-five-layers)
 3. [The boundary: what the agent cannot do](#3-the-boundary-what-the-agent-cannot-do)
 4. [Modes: manual or auto](#4-modes-manual-or-auto)
 5. [Roles: Owner, orchestrator, builder, verifier, reader, steward](#5-roles-owner-orchestrator-builder-verifier-reader-steward)
@@ -21,7 +21,7 @@ This document explains the harness as a system: what it is made of, what it guar
 
 ## 1. The idea in one paragraph
 
-Give the agent as much freedom as possible, and protect only what a mistake could cost you. The protection lives on GitHub's servers and in your repository, not in instructions the agent has to read and obey: the agent works as a bot account that simply has no permission to change `main`, GitHub refuses to merge a head no independent verifier passed, and Claude Code's own permission rules refuse the merge tools. Inside that boundary, quality is not bought by prescribing steps. It comes from checking results: an independent session that built none of the work tries it the way a user would, breaks each behaviour to see the tests fail, and reads the code as its future maintainer.
+Give the agent as much freedom as possible, and protect only what a mistake could cost you. The protection lives on GitHub's servers and in your repository, not in instructions the agent has to read and obey: the agent works as a bot account that simply has no permission to change `main`, GitHub refuses to merge a head without a PASS from a session that signed none of the work (unless you bypass it as admin), and Claude Code's own permission rules refuse the merge tools. Inside that boundary, quality is not bought by prescribing steps. It comes from checking results: an independent session that built none of the work tries it the way a user would, breaks each behaviour to see the tests fail, and reads the code as its future maintainer.
 
 Two kinds of rule follow from this, and every rule in the harness is one or the other:
 
@@ -32,13 +32,15 @@ Two kinds of rule follow from this, and every rule in the harness is one or the 
 
 ---
 
-## 2. Three layers
+## 2. Five layers
 
-<p align="center"><img src="assets/diagrams/01-three-layers.png" width="1047" alt="Three layers. Grown guards (pitfalls, then types, lint and tests, then CI checks), from retro and correct, are read by the next task. The method layer (early: sharpen, how, why, spec; middle: design, plan, prove; late: verify, try-it, blast-radius, trail, report; end of cycle: retro, correct) works inside the permission layer, which is fixed and enforced by GitHub: a bot account with the Write role only, a ruleset on main requiring a pull request and one approval with no force push or deletion, and the mode, manual or auto."></p>
+<p align="center"><img src="assets/layers.png" width="948" alt="The five layers. You type /shilaycow, approve and merge. Entry, the only part loaded every time: the /shilaycow router, which runs state.py, checks it acts as the bot and lets only run start unattended work; .shilaycow/config.yml; the CLAUDE.md section saying where each piece of state lives; and every-agent.md, which every agent the run starts reads first. The router opens one procedure (agree, run, finish, status), read when the run reaches it; run starts the role cards (builder, verifier, reader, steward), each agent reading only its own. Each role reads only the knowledge it needs: prove, verify, plan, blast-radius, principles, your project's try-app, how and why named on the cards' steps, and spec when the shape changes; with the references and the project's pitfalls. Computation, facts with one right answer: state.py, the verdict workflow, which posts the status the ruleset requires, and permissions.deny, enforced by Claude Code. The boundary is not the harness's own and holds the real locks and all the state: on GitHub the ruleset on main, the bot account with Write only, Actions running main's version, the branches, issues and comments; in Claude Code the skills, sessions, permissions and tools."></p>
 
-- **The permission layer** is set up once per repository with `shilaycow-setup` and is needed only for auto mode.
-- **The method layer** is the same in both modes. In manual mode you call the skills yourself; in auto mode the orchestrator calls the same skills.
-- **Grown guards** belong to neither mode. A new project ships with none; each one is added because a mistake actually happened twice in that project.
+- **Entry** is all that is loaded when you type the command. Everything below it is read only when the run reaches the step that needs it, so a long task does not carry rules it is not using.
+- **Procedures and roles** say who does what and in what order. Every agent the run starts reads `every-agent.md` and its own card, nothing about the work beyond what its card lists.
+- **Knowledge** is the same in both modes. In manual mode you call the skills yourself; in auto mode the procedures and cards name them.
+- **Computation** holds the facts that have one right answer, so they are computed every time instead of remembered or judged.
+- **The boundary** is not the harness's own: GitHub and Claude Code enforce it whatever the agent has read. It is set up once per repository with `sc-setup`, and is needed only for auto mode. A new project has no grown guards; each one is added because a mistake actually happened twice in that project.
 
 ---
 
@@ -49,11 +51,11 @@ Every action with a large blast radius (irreversible, external, or costly) gets 
 | Action | Why it is dangerous | Guard | Strength |
 |---|---|---|---|
 | Changing `main` | the one thing you cannot throw away | Ruleset: pull request required, one approval, no force push, no deletion. The bot opens the pull request, and GitHub does not let an author approve their own. Claude Code's `permissions.deny` also refuses `gh pr merge` and the GitHub merge tools, in a session acting as you too | Server side, and the host |
-| Merging a head nobody judged | a push after the verdict, or a branch updated from `main`, would reach you unchecked | the workflow `shilaycow-verdict` posts the status `shilaycow/verdict` on the head of every pull request into `main`: green only when the newest verdict by the bot naming that exact commit is a PASS, so a pull request another account opened is red too. The PASS counts only from a session that built none of it: its `Session:` may not be one that signed a `Ready.` comment or a commit's `Claude-Session:` trailer. Every commit must be linked to the bot or to you, so one made under git's default identity is red. The ruleset requires it from GitHub Actions, with branches up to date, so the commit merged is the commit judged; a status the bot posts does not count, | Server side |
+| Merging a head nobody judged | a push after the verdict, or a branch updated from `main`, would reach you unchecked | the workflow `shilaycow-verdict` posts the status `shilaycow/verdict` on the head of every pull request into `main`: green only when the newest verdict by the bot naming that exact commit is a PASS, so a pull request another account opened is red too. The PASS counts only from a session that built none of it: its `Session:` may not be one that signed a `Ready.` comment or a commit's `Claude-Session:` trailer. Every commit must be linked to the bot or to you, so one made under git's default identity is red. The ruleset requires it from GitHub Actions, with branches up to date, so the commit merged is the commit judged; a status the bot posts does not count | Server side |
 | Changing settings, rulesets or collaborators | would remove the guard above | the bot has the Write role, not Admin | Server side |
 | Changing CI workflows | could disable required checks | a workflow changed on a branch runs only once you merge it: the verdict check runs the copy on `main`, never a pull request's, and the change is in the diff you read | Server side |
 | Reading or leaking secrets | cannot be taken back | the cloud environment holds no secrets | Configuration |
-| External side effects (deploy, email, paid APIs) | cannot be taken back | the environment's network allows package registries and `github.com` only; no deploy credentials | Configuration |
+| External side effects (deploy, email, paid APIs) | cannot be taken back | configure the cloud environment's network to allow package registries and `github.com` only, and give it no deploy credentials; setup does not check this | Your configuration |
 | Runaway spending | money and quota | the limits of your Claude plan or API account; a run also ends when a defect survives `fix_rounds` or you say stop | Your account |
 | Losing work on a task's branch | a forced push overwrites commits | a task has one run, and no role force-pushes: a plain push is refused when the branch has moved | Instructions; git |
 
@@ -77,13 +79,13 @@ mode: auto     # manual | auto
 | Mode | Who calls the skills | You merge | The agent acts as | The agent merges, on its own | Setup |
 |---|---|---|---|---|---|
 | `manual` (no config) | you, skill by skill | whatever you choose | you | nothing | none |
-| `auto` | the orchestrator: `/shilaycow` agrees a brief with you, `/shilaycow run` runs it | one pull request per task | the bot | tickets into `task/<slug>` | `shilaycow-setup` once |
+| `auto` | the orchestrator: `/shilaycow` agrees a brief with you, `/shilaycow run` runs it | one pull request per task | the bot | tickets into `task/<slug>` | `sc-setup` once |
 
 In both modes the agent never merges `main`. In auto mode every task has the same shape, whatever its size: a branch `task/<slug>` created when the task begins, every file about the task in `docs/tasks/<slug>/` on that branch, tickets built on `work/` branches and merged into it by the orchestrator, and one pull request into `main` at the end. Work too large to review as one pull request becomes a chain of tasks (section 6.4), not a larger task.
 
 What the branches look like, with two tickets:
 
-<p align="center"><img src="assets/diagrams/03-task-branches.png" width="670" alt="Branches in auto mode. From main, a task branch receives the brief, design and plan. Ticket T-01 is built on its own work branch and the orchestrator merges it into the task branch; the same for T-02. The task branch then gets the spec update and the final report, and you merge the task into main."></p>
+<p align="center"><img src="assets/diagrams/03-task-branches.png" width="670" alt="Branches in auto mode. From main, a task branch receives the brief, design and plan. Ticket T-01 is built on its own work branch and the orchestrator merges it into the task branch; the same for T-02. The task branch then gets the spec update, its pull request carries the description, and you merge the task into main."></p>
 
 ---
 
@@ -100,7 +102,7 @@ What the branches look like, with two tickets:
 
 All roles act as the same bot account, so they are told apart by session: every `Ready.` and every verdict carries a `Session:` line, and a `PASS` whose session matches one that signed a `Ready.` or a commit is no verdict: the orchestrator rejects it, and the verdict check stays red.
 
-<p align="center"><img src="assets/diagrams/04-roles.png" width="943" alt="Roles over time. You describe the task; the orchestrator says back what it understood and writes brief.md on the task branch. You approve it and type /shilaycow run, which runs a gate checking the config, that one task is open and the brief is the one you approved, and has the agent confirm with its own GitHub tools that it acts as the bot; only then does the run go on unattended. The orchestrator opens a tracking issue, named in the trail, then for each ticket claims it by creating its work branch and gives a builder its role file and the ticket; the builder pushes a work branch, opens a pull request and posts Ready. When the ticket's risk is high, or the orchestrator judges it worth it, a verifier judges that pull request. The orchestrator merges each ticket locally and pushes the task branch, then updates the spec, writes the final report and opens the pull request into main, which a verifier judges on its exact head commit; the status shilaycow/verdict is green only for a PASS on that head. The orchestrator posts findings, Retro and Finished, and you merge or send it back."></p>
+<p align="center"><img src="assets/diagrams/04-roles.png" width="943" alt="Roles over time. You describe the task; the orchestrator says back what it understood and writes brief.md on the task branch. You approve it and type /shilaycow run, which runs a gate checking the config, that one task is open and the brief is the one you approved, and has the agent confirm with its own GitHub tools that it acts as the bot; only then does the run go on unattended. The orchestrator opens a tracking issue titled Task: slug, then for each ticket creates its work branch and gives a builder its role file and the ticket; the builder pushes a work branch, opens a pull request and posts Ready. When the ticket's risk is high, or the orchestrator judges it worth it, a verifier judges that pull request. The orchestrator merges each ticket locally and pushes the task branch, then updates the spec, writes the pull request's description and opens the pull request into main, which a verifier judges on its exact head commit; the status shilaycow/verdict is green only for a PASS on that head. The orchestrator posts findings, a steward's Retro and Finished, and you merge or send it back."></p>
 
 The builder never starts its own verifier: whoever is being judged does not write the judge's instructions. Every agent the orchestrator starts reads `every-agent.md` first, a few lines that hold for every role (act as the bot, push only your own branch, the card is the whole standard), then its role card. Every session the orchestrator starts is closed once its work is done, including one that stopped or stopped answering; a run leaves no session or worktree behind.
 
@@ -111,7 +113,7 @@ The builder never starts its own verifier: whoever is being judged does not writ
 A task has two halves with one explicit handover: **you type `/shilaycow run`**.
 
 - **The first half is a conversation, with `/shilaycow`.** It says back what you asked for in its own words, then turns it into a brief of plain Given / When / Then scenarios. You can also design together here, and ask or discuss as long as you like: nothing you say to the orchestrator starts the run, not even "start". Whatever is agreed is written to files on the task branch as you go, so nothing depends on the conversation surviving.
-- **The handover is a command, not a sentence.** Words can be misread; a command cannot. `/shilaycow run` first runs a gate, `state.py`, a script that computes the project's state from git with one right answer for each check: auto mode is on, exactly one task is open, and its brief is the very version you approved: when you approve it, the orchestrator records a `brief-approved` row with the brief's commit, and the gate refuses a brief changed since. Approving and starting are two separate acts, by two parties: the orchestrator records your approval, and only you type the command. Only the boundary and the handover can stop a run. The brief's shape (every heading filled in, scenarios written as Given / When / Then, none promising more than a check could show) is only warned about: you approved the brief as it stands, and its form being off cannot cost what an unwanted unattended run can. The run lists every warning on its tracking issue. One thing a script cannot answer is which account the session acts as: it could only ask GitHub with a credential of its own, which says nothing about the account the session's GitHub tools and pushes use. So the agent asks its own tools (`get_me`) before starting, and the verifier later confirms that the tracking issue and the pull request were opened by the bot. The ruleset on `main` is checked by `/shilaycow-setup`, setting by setting, against the one it ships. If anything fails, it changes nothing and tells you what to fix. Text you type after the command is never taken as an instruction. Neither skill can be started by the model on its own; only you can type them.
+- **The handover is a command, not a sentence.** Words can be misread; a command cannot. `/shilaycow run` first runs a gate, `state.py`, a script that computes the project's state from git with one right answer for each check: auto mode is on, exactly one task is open, and its brief is the very version you approved: when you approve it, the orchestrator records a `brief-approved` row with the brief's commit, and the gate refuses a brief changed since. Approving and starting are two separate acts, by two parties: the orchestrator records your approval, and only you type the command. Only the boundary and the handover can stop a run. The brief's shape (every heading filled in, scenarios written as Given / When / Then, none promising more than a check could show) is only warned about: you approved the brief as it stands, and its form being off cannot cost what an unwanted unattended run can. The run lists every warning on its tracking issue. One thing a script cannot answer is which account the session acts as: it could only ask GitHub with a credential of its own, which says nothing about the account the session's GitHub tools and pushes use. So the agent asks its own tools (`get_me`) before starting, and the verifier later confirms that the tracking issue and the pull request were opened by the bot. The ruleset on `main` is checked by `/sc-setup`, setting by setting, against the one it ships. If anything fails, it changes nothing and tells you what to fix. Text you type after `run` is never taken as an instruction: the request belongs to `/shilaycow`, where the brief is agreed. Neither skill can be started by the model on its own; only you can type them.
 - **On a resume,** the same gate runs again: a brief changed after the run started has no approval for its new commit, so the run waits until you approve the change with `/shilaycow`.
 - **The second half is unattended.** The orchestrator decides everything else: whether a design is needed, how to cut the work, whether to build itself or dispatch builders, which tickets deserve their own verification.
 
@@ -127,7 +129,7 @@ Two exits apply from **any** unattended state, so they are not drawn as arrows:
 | State | What is true | Written where |
 |---|---|---|
 | Sharpening | the orchestrator is restating and asking about outcomes only | `docs/tasks/<slug>/brief.md` |
-| Approved | you typed `/shilaycow run` and the gate held | first line of the tracking issue, which names the brief's commit |
+| Approved | you approved the brief as it stands | a `brief-approved <commit>` row in `trail.tsv`; once you type `/shilaycow run`, the tracking issue's opening post names that commit after the warnings |
 | Planning | the work is cut into tickets someone could pick up cold | `plan.md`, `tickets/T-nn.md` |
 | Building | tickets are being built, proven and merged into the task branch | `work/<slug>/T-nn` pull requests |
 | Finishing | `docs/spec/` is brought up to date if the task changed the system's shape, the pull request's description is written | `docs/spec/`, the pull request into `main` |
@@ -142,17 +144,17 @@ Two exits apply from **any** unattended state, so they are not drawn as arrows:
 
 ### 6.3 Risk, per ticket
 
-How closely work is checked depends on what it touches, not on how big the task is. A large task often splits into many tickets that could not do much harm, while one small ticket can sit at the core of the system. So every ticket, including any work the orchestrator does itself, carries a risk level, set by `shilaycow-blast-radius`:
+How closely work is checked depends on what it touches, not on how big the task is. A large task often splits into many tickets that could not do much harm, while one small ticket can sit at the core of the system. So every ticket, including any work the orchestrator does itself, carries a risk level, set by `sc-blast-radius`:
 
 | Risk | When (the highest that applies) | Verification |
 |---|---|---|
-| low | documents, tests, or code inside one module that nothing else calls | tests, scenarios, the real thing; the diff is scanned, not read closely, to confirm it touches only what its level says |
+| low | documents, tests, or code inside one module that nothing else calls | every check, two of them lighter: one behaviour per scenario is broken, and the diff is scanned, not read closely, to confirm it touches only what its level says |
 | medium | code or an interface that something else calls | every check |
-| high | a data model or migration, authentication or permissions, money, anything irreversible or external, concurrency, code most of the system calls, or anything in the brief's **Critical areas** | every check, every behaviour broken rather than a sample, and `shilaycow-blast-radius` on the ticket's diff; designed with a second shape weighed, and verified on its own before it is merged into the task branch |
+| high | a data model or migration, authentication or permissions, money, anything irreversible or external, concurrency, code most of the system calls, or anything in the brief's **Critical areas** | every check, every behaviour broken rather than a sample, and `sc-blast-radius` on the ticket's diff; designed with a second shape weighed, and verified on its own before it is merged into the task branch |
 
-Planning estimates each level from the ticket. The verifier sets it again from the actual diff and may raise it, never lower it, so the work being judged never decides how lightly it is judged. Changes that came from no ticket count as at least medium. Critical areas are your one input here: the parts of your system where any change matters, which the code alone cannot tell the agent. The final report lists every ticket with its level, so you can see where verification was light.
+Planning estimates each level from the ticket. The verifier sets it again from the actual diff and may raise it, never lower it, so the work being judged never decides how lightly it is judged. Changes that came from no ticket count as at least medium. Critical areas are your one input here: the parts of your system where any change matters, which the code alone cannot tell the agent. The pull request's description lists every ticket with its level, so you can see where verification was light.
 
-Every pull request into `main` that changes the system's code also gets `shilaycow-blast-radius` against `main`.
+Every pull request into `main` that changes the system's code also gets `sc-blast-radius` against `main`.
 
 ### 6.4 Large systems: a chain of tasks
 
@@ -170,7 +172,7 @@ Task 0 has nothing to run, so its verification is different: instead of tests an
 
 ## 7. Verification: how a verdict is reached
 
-`shilaycow-verify` runs in a session that built none of the work, on a clean checkout of one head commit. It treats the builder's claims as claims, not evidence.
+`sc-verify` runs in a session that built none of the work, on a clean checkout of one head commit. It treats the builder's claims as claims, not evidence.
 
 <p align="center"><img src="assets/diagrams/08-verification.png" width="738" alt="How a verdict is reached. On a clean checkout of the head commit, a session that built any of the work stops: someone else verifies. Otherwise it runs six checks, each with evidence: tests, scenarios, the real thing, tests that can fail, what went unsaid, and the code itself (only scanned for low-risk work). Any failed item that is a defect gives Verification: FAIL with which check, whether each item is a defect or a gap, how to reproduce, what was seen and where else the same kind of mistake was searched for; otherwise Verification: PASS, with the gaps listed, if any, and findings for everything else."></p>
 
@@ -179,10 +181,10 @@ Rules that make the verdict trustworthy:
 - **Evidence is a command and its output, a screenshot, a file and line.** Never a sentence.
 - **One verdict per head commit.** A new commit needs a new verdict, and nothing is pushed after the verdict on the pull request you merge. This one is enforced: the required status `shilaycow/verdict` turns red on any head without a PASS, so GitHub refuses to merge it.
 - **A finding never turns a PASS into a FAIL, and is never left out to keep a PASS clean.**
-- **Every failed item is a defect or a gap.** A gap means users can already do what the scenario says and the verifier saw it work; only the proof or the documents around it fall short. At high risk every failed item is a defect. Only a defect fails the verdict: when every failed item is a gap, the verdict is a PASS with a `### Gaps` list, `Finished:` says how many there are, and each gets an issue for a later task. A gap therefore never makes you override the required check to merge.
+- **Every failed item is a defect or a gap.** A gap means users can already do what the scenario says and the verifier saw it work; only the proof or the documents around it fall short. At high risk every failed item is a defect. Only a defect fails the verdict: when every failed item is a gap, the verdict is a PASS with a `### Gaps` list, `Finished:` says how many there are, and each is left for you or filed as a `later` issue. A gap therefore never makes you override the required check to merge.
 - **A FAIL names the class, not one instance.** For each failed item the verifier says where else it searched for the same kind of mistake, so a fix round fixes all of it instead of the one place that was seen.
 - **A fix round is judged by what changed.** A new verifier is given the earlier verdict and checks the full suite, every check that failed, and the diff between the two heads; if that diff changes code the product runs, it does every check again. Merging `main` into the branch is judged the same way and is not counted as a fix round.
-- **No behaviour ships on a test that cannot fail.** This is the only rule in the method layer that is enforced.
+- **No behaviour ships on a test that cannot fail.** The verifier checks this on every verdict, by breaking behaviours and seeing the tests fail.
 
 ---
 
@@ -210,7 +212,7 @@ What you find wrong after merging is the most valuable input: it is what verific
 
 The loop runs at the start of the next task, not at the end of this one, so that nothing in it depends on a branch that may be thrown away or a run that may stop early. `/shilaycow` folds every Retro the pitfalls file on `main` does not yet cite, so folding twice changes nothing and a discarded task's lessons are folded again by the next one. It then proposes the corrections that are now due as scenarios of the new task, for you to accept or leave out.
 
-**Gaps and findings wait, on purpose.** A gap (work that does what its scenario says but whose proof or documents fall short) and a finding outside the scenarios are not fixed in the run that found them: each becomes an issue labelled `later`. Patched one by one as they are found, they scatter small fixes across the repository; gathered, they show their shared cause. When a new task touches their area, the orchestrator offers to fold them in; when many are open or they share a cause, it suggests a task of their own; a class seen in two tasks becomes a pitfall, and then a guard. Defects never wait: they are fixed in the run that found them.
+**Gaps and findings wait, on purpose.** A gap (work that does what its scenario says but whose proof or documents fall short) and a finding outside the scenarios are not fixed in the run that found them: each is left for you or filed as an issue labelled `later`. Patched one by one as they are found, they scatter small fixes across the repository; gathered, they show their shared cause. When a new task touches their area, the orchestrator offers to fold them in; when many are open or they share a cause, it suggests a task of their own; a class seen in two tasks becomes a pitfall, and then a guard. Defects never wait: they are fixed in the run that found them.
 
 **Within one task, a pitfall that comes back is not patched again.** When a defect's cause matches an entry in the pitfalls file, the fix round first lists every instance of the class and adds a guard that fails on each, the way a correction would, and only then fixes.
 
@@ -225,7 +227,7 @@ The loop runs at the start of the next task, not at the end of this one, so that
   worktrees/T-<nn>/     where builders work, a folder per ticket; ignored by git
 .claude/
   settings.json         permissions.deny: gh pr merge and the GitHub tools that merge or turn on auto-merge
-  skills/try-<app>/     how to start and drive your app, made by shilaycow-try-it
+  skills/try-<app>/     how to start and drive your app, made by sc-try-it
 .github/workflows/
   shilaycow-verdict.yml posts the status the ruleset requires: PASS for this exact head, or red
 docs/roadmap.json       in a chain of tasks: each task, its dependencies, its pull request, done or not
@@ -248,13 +250,13 @@ Only two files have a fixed shape, because you read them: `brief.md` (what you a
 
 | File | Written by | Read by |
 |---|---|---|
-| `config.yml` | `shilaycow-setup`, then only you | every skill |
-| `pitfalls.md` | the next `/shilaycow` (from `Retro:` comments, and its corrections) | `shilaycow-plan`, builders, the steward |
-| `try-<app>` | `shilaycow-try-it`, during the first task | `shilaycow-verify`, the pull request's description |
-| `docs/spec/` | `shilaycow-spec`, before the pull request of a task that changes the system's shape | `/shilaycow` writing a brief, `shilaycow-verify`, `shilaycow-how`, builders |
+| `config.yml` | `sc-setup`, then only you | every skill |
+| `pitfalls.md` | the next `/shilaycow` (from `Retro:` comments, and its corrections) | `sc-plan`, builders, the steward |
+| `try-<app>` | `sc-try-it`, during the first task | `sc-verify`, the pull request's description |
+| `docs/spec/` | `sc-spec`, before the pull request of a task that changes the system's shape | `/shilaycow` writing a brief, `sc-verify`, `sc-how`, builders |
 | `brief.md` | `/shilaycow`, with you | the reader, plan, verify, the pull request's description |
-| `design.md` | `shilaycow-plan`, when the shape is open | builders, verify |
-| `plan.md`, `tickets/` | `shilaycow-plan` | the orchestrator, builders, verify |
+| `design.md` | `sc-plan`, when the shape is open | builders, verify |
+| `plan.md`, `tickets/` | `sc-plan` | the orchestrator, builders, verify |
 | `trail.tsv` | the orchestrator; builders' rows come in their `Ready.` comments and the orchestrator adds them when a ticket lands | the pull request's description, verify, the steward, you |
 
 **Branches**
@@ -306,7 +308,7 @@ Because of this, running `/shilaycow run` again on the same task resumes it, aft
 | The final pull request is large and you do not read it closely | a problem reaches `main` | the verifier drives every scenario; the pull request's description lists every decision the agent made on its own; your test command can be a required check |
 | The cloud session is connected to your account, not the bot | the agent acts as you and the ruleset does not apply to it | before any unattended work the agent asks its own GitHub tools who it is and stops if it is not the configured bot; the verifier fails a pull request or tracking issue the bot did not open, so a wrong account is caught before you merge, and a merge can be reverted |
 | Permission prompts are turned off in manual mode | same as above | documented; cannot be detected |
-| The project gains production, real users or secrets | the boundary table is no longer enough | out of scope; `shilaycow-setup` warns when it sees deploy configuration or secrets |
+| The project gains production, real users or secrets | the boundary table is no longer enough | out of scope; `sc-setup` warns when it sees deploy configuration or secrets |
 | Builder and verifier are the same model on the same account | verification catches honest mistakes only | accepted: the agent is assumed to cooperate and err, not to cheat; you are the final gate |
 | Parallel builders edit the same file | merge conflicts | the orchestrator runs in parallel only tickets whose areas do not overlap; a conflict when a ticket lands shows they were not independent, and it is resolved on the ticket's branch |
 | Two sessions run the same task | duplicated work | the second stops when it sees the first; no role force-pushes, so a stale push is refused (section 11); the cost is effort, not correctness |

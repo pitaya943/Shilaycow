@@ -1,6 +1,6 @@
 ---
-name: shilaycow-how
-description: "Use for 'how does X work', before changing an unfamiliar area, or to decide where new code belongs. Don't use for why something is the way it is: use shilaycow-why."
+name: sc-how
+description: "Use for 'how does X work', before changing an unfamiliar area, or to decide where new code belongs. Don't use for why something is the way it is: use sc-why."
 ---
 
 # How
@@ -26,7 +26,7 @@ Start from `docs/spec/` when it exists, then confirm what it says in the code. E
 
 ## Stop when
 
-- The answer depends on behaviour you can only learn by running the system. Say what to run; `shilaycow-blast-radius` or `shilaycow-try-it` is the tool for that.
+- The answer depends on behaviour you can only learn by running the system. Say what to run; `sc-blast-radius` or `sc-try-it` is the tool for that.
 
 ## Outputs
 

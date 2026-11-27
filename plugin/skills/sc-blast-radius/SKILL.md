@@ -1,6 +1,6 @@
 ---
-name: shilaycow-blast-radius
-description: "Use before shared code ships or a task branch goes to main: finds what the change could break elsewhere, proves the facts its safety rests on, and sets each ticket's risk level. Don't use to decide whether a pull request is ready to merge: use shilaycow-verify."
+name: sc-blast-radius
+description: "Use before shared code ships or a task branch goes to main: finds what the change could break elsewhere, proves the facts its safety rests on, and sets each ticket's risk level. Don't use to decide whether a pull request is ready to merge: use sc-verify."
 ---
 
 # Blast radius
@@ -45,4 +45,4 @@ Write it with the signal that set it: `Risk: high (writes the orders table)`. Pl
 
 ## Outputs
 
-A short list in the conversation, or inside a `shilaycow-verify` verdict or a final report when called from there.
+A short list in the conversation, or inside a `sc-verify` verdict or a final report when called from there.
