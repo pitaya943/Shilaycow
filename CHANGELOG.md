@@ -1,5 +1,23 @@
 # Changelog
 
+## 0.6.0
+
+A simpler harness: one command, eleven skills, and only the guards a real failure or an irreversible step calls for, each with a proof. The guarantees are the same: nothing reaches `main` unless you merge a head an independent verifier passed.
+
+- **The verdict check refuses a self-judged PASS.** A PASS counts only when its `Session:` names no session that signed a `Ready.` comment, a commit's `Claude-Session:` trailer or the pull request's description.
+- **Every commit must be linked to the bot or to you.** A commit made under git's default identity, which belongs to no GitHub account, turns the verdict check red and names the commit.
+- **The hook is gone; Claude Code's deny rules take its place.** `.claude/settings.json` denies `gh pr merge` and the GitHub tools that merge or turn on auto-merge, in every permission mode. A push to `main` was already refused by the ruleset. Pushes to a task's branches are no longer compare-and-swaps: a task has one run, and no role force-pushes, so a stale push is refused by git itself.
+- **The gate is now `state.py`, and it prints the state instead of a verdict.** One JSON object computed from git: the open task, whether its brief is approved at its current commit, which tickets have landed, fix rounds used per ticket and for `main`, and the next task in `docs/roadmap.json` when there is one. Anything in `problems` stops a run; brief-shape `warnings` never do.
+- **Fix rounds are counted from the trail.** Each round adds a row `fix-round <T-nn or main>`; a scope that has used `fix_rounds` of them is listed as exhausted, and its next FAIL goes to you.
+- **Fewer trail rows.** `autopilot-start` and `tracking-issue` are gone: the tracking issue is found by its title, and a brief changed during a run simply needs a new approval. The 0.3 upgrade checks are gone too.
+- **One command: `/shilaycow`.** It replaces `/shilaycow-chief`, `/shilaycow-autopilot` and `/shilaycow-status`. With a request it agrees the brief with you; alone it says where things stand and what to type next; `/shilaycow run` starts or resumes the approved task unattended. Inside, a short router reads `state.py` and opens one of four procedures (agree, run, finish, status) when it reaches them.
+- **Every agent the run starts reads `every-agent.md` first**, five lines that hold for every role, then its card: builder, verifier, reader (the brief's cold reader) or steward (who posts the `Retro:`). The trail names the orchestrator as `orchestrator`.
+- **Eleven skills instead of seventeen.** `shilaycow-sharpen`, `-trail`, `-report`, `-retro` and `-correct` are now rules inside `/shilaycow`, read when the run reaches them; `shilaycow-design` is the first part of `shilaycow-plan`, used when the scenarios leave the system's shape open. The pull request into `main` carries the report in its description: there is no `reports/final.md`. A steward posts the `Retro:`, and the next task proposes the corrections that are due.
+- **The roadmap is `docs/roadmap.json`, and the spec changes only when the shape does.** A chain of tasks is a JSON list (slug, goal, dependencies, pull request, done) that `state.py` reads to name the next task and to refuse a loop or a task started too early. `docs/spec/` is updated by a task that changes the system's shape or what a user can see; a fix or a refactor leaves it alone, and the drift check runs when you ask for it.
+- **Builders and verifiers are told when to ask how and why.** A builder loads `shilaycow-how` before changing an area it does not know and `shilaycow-why` before fixing a bug; a verifier loads `shilaycow-why` when the work changes something that looks deliberate.
+
+Type `/shilaycow` where you typed `/shilaycow-chief`, `/shilaycow-status` or `/shilaycow-autopilot` (now `/shilaycow run`), and where you typed `/shilaycow-sharpen` (with your idea); `/shilaycow-design` is `/shilaycow-plan`; move a `docs/spec/roadmap.md` into `docs/roadmap.json` in the form `shilaycow-spec` shows; the setup script removes the old skill folders when it installs this version. To upgrade a repository, run `/shilaycow-setup` again: its pull request replaces the verdict workflow, adds the deny rules, and removes `.claude/hooks/shilaycow-guard.py`, the `PreToolUse` entries that ran it and the `merge=union` line in `.gitattributes`.
+
 ## 0.5.2
 
 Closes the gaps an audit found between what 0.5 promised and what it enforced.

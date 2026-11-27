@@ -13,7 +13,7 @@ Read this before you start checking. Record evidence for each check on a clean c
 
 ## How deep, by risk
 
-What each risk level means is in `shilaycow-blast-radius`: load it with your Skill tool (`shilaycow-blast-radius`, or `shilaycow:shilaycow-blast-radius` for a plugin install) before you set levels. Before you start, set each ticket's level again from its diff: you may raise the level the plan gave it, never lower it, and say why when you raise it. Changes on the branch that came from no ticket, such as the Chief's own commits or a merge resolution, count as a ticket of at least medium.
+What each risk level means is in `shilaycow-blast-radius`: load it with your Skill tool (`shilaycow-blast-radius`, or `shilaycow:shilaycow-blast-radius` for a plugin install) before you set levels. Before you start, set each ticket's level again from its diff: you may raise the level the plan gave it, never lower it, and say why when you raise it. Changes on the branch that came from no ticket, such as the orchestrator's own commits or a merge resolution, count as a ticket of at least medium.
 
 - **Low**: every check, with two lighter ones. Check 4 breaks one behaviour per scenario, the one its main test guards. Check 6 scans the diff instead of reading it file by file: confirm it touches only what its level says, which is also how a level set too low is caught.
 - **Medium**: every check; check 4 as for low, then as many other behaviours as the time allows, saying which you broke.

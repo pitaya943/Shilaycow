@@ -12,6 +12,12 @@
 # Every pull request into the default branch needs one, whoever opened it: one opened by another account
 # is red too, which is how a session connected as the wrong account is caught. The owner merges their
 # own pull requests by bypassing the ruleset as admin, which they must do anyway to skip the approval.
+#
+# Two more checks, each from a failure seen in a real run (guards/guards.tsv, K3 and K5):
+# - K3: the PASS must come from a session that built none of it. Its `Session:` line may not name a
+#   session that signed a Ready comment, a commit's Claude-Session trailer or the description's link.
+# - K5: every commit on the pull request is authored by the bot or the owner, as GitHub resolves its
+#   email; a commit under git's default identity is linked to no account and turns the status red.
 name: shilaycow-verdict
 
 on:
@@ -49,29 +55,61 @@ jobs:
           CONTEXT = "shilaycow/verdict"
           HEADING = re.compile(r"^\s*##\s*Verification:\s*(PASS|FAIL)\b")
 
-          def decide(comments, head, bot):
-              """(state, description) for this head, from the comments in the order they were posted."""
-              verdict = None
+          SESSION_LINE = re.compile(r"^\s*(?:Claude-)?Session:\s*(\S+)", re.MULTILINE)
+          SESSION_ID = re.compile(r"session_[A-Za-z0-9]+|[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}")
+
+          def sessions(text):
+              """The session ids a text signs with: `Session: <id>[/T-nn]` or a `Claude-Session: <url>` trailer."""
+              found = set()
+              for value in SESSION_LINE.findall(text or ""):
+                  ids = SESSION_ID.findall(value)
+                  found.update(ids or [value.split("/")[0]])
+              return found
+
+          def decide(comments, head, bot, built=frozenset()):
+              """(state, description) for this head, from the comments in the order they were posted.
+
+              `built` holds the sessions that wrote the work (commit trailers, the description); the
+              sessions that signed a Ready comment are added here. A verdict from one of them is no verdict.
+              """
+              verdict, judge, builders = None, set(), set(built)
               for comment in comments:
                   if (comment.get("user") or {}).get("login") != bot:
                       continue
                   body = comment.get("body") or ""
+                  if body.lstrip().startswith("Ready."):
+                      builders |= sessions(body)
                   match = HEADING.match(body)
                   if match and re.search(rf"\b{head}\b", body):
-                      verdict = match.group(1)
+                      verdict, judge = match.group(1), sessions(body)
+              if verdict == "PASS" and not judge:
+                  return "failure", f"PASS for {head[:7]} names no Session"
+              if verdict == "PASS" and judge & builders:
+                  return "failure", f"PASS for {head[:7]} is from a session that built it"
               if verdict == "PASS":
                   return "success", f"PASS for {head[:7]}"
               if verdict == "FAIL":
                   return "failure", f"FAIL for {head[:7]}"
-              return "failure", f"no verdict for {head[:7]}; run /shilaycow-autopilot"
+              return "failure", f"no verdict for {head[:7]}; run /shilaycow run"
 
           def checked_on(event):
               """Why the status was posted again, so a rerun shows on the pull request even when its verdict is unchanged."""
               return {"issue_comment": "checked after a comment", "pull_request_target": "checked after a push"}.get(event, "checked")
 
-          def bot_login(config):
-              match = re.search(r"^bot:\s*['\"]?([A-Za-z0-9-]+(?:\[bot\])?)", config, re.MULTILINE)
+          def login(config, key):
+              match = re.search(rf"^{key}:\s*['\"]?([A-Za-z0-9-]+(?:\[bot\])?)", config, re.MULTILINE)
               return match.group(1) if match else None
+
+          def bot_login(config):
+              return login(config, "bot")
+
+          def wrong_author(commits, allowed):
+              """The first commit GitHub does not link to an allowed account, as a description, or None."""
+              for commit in commits:
+                  author = (commit.get("author") or {}).get("login")
+                  if author not in allowed:
+                      return f"commit {commit['sha'][:7]} is by {author or 'no GitHub account'}, not the bot"
+              return None
 
           def api(*args):
               return json.loads(subprocess.run(["gh", "api", *args], check=True, capture_output=True, text=True).stdout)
@@ -82,17 +120,27 @@ jobs:
               head = pull["head"]["sha"]
               if pull["base"]["ref"] != default:
                   raise SystemExit(0)  # only pull requests into the default branch need a verdict
-              config = api(f"repos/{repo}/contents/.shilaycow/config.yml?ref={default}")
-              bot = bot_login(base64.b64decode(config["content"]).decode())
+              config = base64.b64decode(api(f"repos/{repo}/contents/.shilaycow/config.yml?ref={default}")["content"]).decode()
+              bot = bot_login(config)
+
+              def pages(path):
+                  out = subprocess.run(["gh", "api", "--paginate", "--slurp", path], check=True, capture_output=True, text=True).stdout
+                  return [item for page in json.loads(out) for item in page]
+
               if bot is None:
                   state, description = "failure", "no bot in .shilaycow/config.yml"
               elif pull["user"]["login"] != bot:
                   state, description = "failure", f"opened by {pull['user']['login']}, not the bot {bot}"
               else:
-                  pages = subprocess.run(["gh", "api", "--paginate", "--slurp", f"repos/{repo}/issues/{number}/comments"],
-                                         check=True, capture_output=True, text=True).stdout
-                  comments = [c for page in json.loads(pages) for c in page]
-                  state, description = decide(comments, head, bot)
+                  commits = pages(f"repos/{repo}/pulls/{number}/commits")  # GitHub lists at most 250
+                  wrong = wrong_author(commits, {bot, login(config, "owner")} - {None})
+                  if wrong:
+                      state, description = "failure", wrong
+                  else:
+                      built = sessions(pull.get("body"))
+                      for commit in commits:
+                          built |= sessions(commit["commit"]["message"])
+                      state, description = decide(pages(f"repos/{repo}/issues/{number}/comments"), head, bot, built)
               description = f"{description} ({checked_on(os.environ.get('EVENT', ''))})"
               subprocess.run(["gh", "api", "-X", "POST", f"repos/{repo}/statuses/{head}", "-f", f"state={state}",
                               "-f", f"context={CONTEXT}", "-f", f"description={description[:140]}"], check=True)

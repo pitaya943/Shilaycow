@@ -7,7 +7,7 @@ Read this when the checks are done, before you write the comment.
 It is a **FAIL** when any of these is true:
 
 - the suite fails, or a scenario this work serves is not shown;
-- for a pull request into `main`, the spec contradicts what the work does, or lacks a scenario the work added (for a documents-only task, its scenarios belong under Not yet built: `references/checks.md`);
+- for a pull request into `main`, the spec contradicts what the work does, or lacks a scenario for behaviour a user can see that the work added (a fix or a refactor that leaves that behaviour as the spec says needs no spec change; for a documents-only task, its scenarios belong under Not yet built: `references/checks.md`);
 - the "how to try it" steps do not work as written;
 - a test still passes with its behaviour broken, or takes its expected value from the code it tests;
 - a behaviour is reported as proven with neither a test nor a recorded driven check;

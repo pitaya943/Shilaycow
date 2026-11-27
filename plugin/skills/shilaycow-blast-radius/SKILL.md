@@ -31,7 +31,7 @@ Do not hand back an essay. Hand back the facts, the level each reached, and the 
 
 ## Risk level
 
-Every ticket, and any work the Chief does itself, gets one level from what it touches, never from how large it is. The highest that applies wins:
+Every ticket, and any work the orchestrator does itself, gets one level from what it touches, never from how large it is. The highest that applies wins:
 
 - **high**: a data model or migration, authentication or permissions, money, anything irreversible or external, concurrency, code that most of the system calls (count the callers), or anything in the brief's Critical areas;
 - **medium**: code or an interface that something else calls;

@@ -30,4 +30,4 @@ Start from `docs/spec/` when it exists, then confirm what it says in the code. E
 
 ## Outputs
 
-A reply in the conversation. When called from `shilaycow-sharpen` or `shilaycow-design`, the points they need go into their file.
+A reply in the conversation. When called while writing a brief or a design, the points they need go into that file.

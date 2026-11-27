@@ -1,15 +1,10 @@
----
-name: shilaycow-sharpen
-description: "Use when shilaycow-chief sharpens a brief with the user, or in manual mode to say back what they want and write a brief of plain-language scenarios they approve. Don't use to start a task in auto mode: use shilaycow-chief."
----
+# The brief
 
-# Sharpen
-
-Turn an idea into a brief that someone could check the finished work against. The brief is what the user approves, what `shilaycow-design` starts from and what `shilaycow-verify` accepts against.
+Read this when you write a task's brief with the user (`procedures/agree.md`). Turn an idea into a brief that someone could check the finished work against: it is what the user approves, what a design and the plan start from, and what the verifier accepts against.
 
 ## Inputs
 
-The user's idea. The repository as it is. `docs/spec/` if it exists: read its index, `roadmap.md` if there is one (its next task is usually this one), and the areas the idea touches before asking anything.
+The user's idea. The repository as it is. `docs/spec/` if it exists: read its index; and `docs/roadmap.json` if there is one (`state.py` names its next task, usually this one), and the areas the idea touches before asking anything.
 
 ## Done when
 
@@ -39,8 +34,8 @@ And for every scenario you can name a test that would fail today (or, for one th
 ## Stop when
 
 - The user says it is enough. Write what is still unknown under the scenario it affects, as an assumption.
-- The idea is several tasks: more than one pull request a person could review closely. Say so, propose the chain as `docs/spec/roadmap.md` (`shilaycow-spec`), and sharpen only the first. Order it so that what is hardest to change later comes first, nothing comes before what it depends on, and every task after the first leaves something a user can try. For a large system the first task's deliverable is the specification itself: documents only, its scenarios under Not yet built. When the user would rather the first task also build something, it still writes the spec and the roadmap first, and records that choice in the trail.
+- The idea is several tasks: more than one pull request a person could review closely. Say so, propose the chain as `docs/roadmap.json` (`shilaycow-spec` gives its form), and write the brief for the first only. Order it so that what is hardest to change later comes first, nothing comes before what it depends on, and every task after the first leaves something a user can try. For a large system the first task's deliverable is the specification itself: documents only, its scenarios under Not yet built. When the user would rather the first task also build something, it still writes the spec and the roadmap first, and records that choice in the trail.
 
 ## Outputs
 
-`docs/tasks/<slug>/brief.md`. The task does not proceed to unattended work until the user explicitly approves it.
+`docs/tasks/<slug>/brief.md`. Nothing runs unattended until the user explicitly approves it.
